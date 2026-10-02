@@ -50,6 +50,13 @@
       "when": 1790972941196,
       "tag": "0006_version_download_url",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790973458366,
+      "tag": "0007_protect_profile_email_and_media",
+      "breakpoints": true
     }
   ]
 }
