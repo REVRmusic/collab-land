@@ -8,9 +8,9 @@ import { Waveform } from "@/components/Waveform";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Stemroom — Le studio partagé des producteurs" },
+      { title: "CollabLand — Le studio partagé des producteurs" },
       { name: "description", content: "Vitrine de projets, historique des versions, stems, covers et vocaux : collabore avec tes amis producteurs." },
-      { property: "og:title", content: "Stemroom — Le studio partagé des producteurs" },
+      { property: "og:title", content: "CollabLand — Le studio partagé des producteurs" },
       { property: "og:description", content: "Vitrine de projets, historique des versions, stems, covers et vocaux entre producteurs." },
     ],
   }),

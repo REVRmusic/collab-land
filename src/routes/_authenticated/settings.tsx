@@ -17,9 +17,9 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({
     meta: [
-      { title: "Paramètres — Stemroom" },
+      { title: "Paramètres — CollabLand" },
       { name: "description", content: "Modifie ton nom d'utilisateur, ta photo et tes notifications." },
-      { property: "og:title", content: "Paramètres — Stemroom" },
+      { property: "og:title", content: "Paramètres — CollabLand" },
       { property: "og:description", content: "Modifie ton profil et tes notifications." },
     ],
   }),

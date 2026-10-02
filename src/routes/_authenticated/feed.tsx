@@ -7,9 +7,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 export const Route = createFileRoute("/_authenticated/feed")({
   head: () => ({
     meta: [
-      { title: "Fil — Stemroom" },
+      { title: "Fil — CollabLand" },
       { name: "description", content: "Les derniers projets et versions de tes amis producteurs." },
-      { property: "og:title", content: "Fil — Stemroom" },
+      { property: "og:title", content: "Fil — CollabLand" },
       { property: "og:description", content: "Les derniers projets et versions de tes amis." },
     ],
   }),

@@ -19,9 +19,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 export const Route = createFileRoute("/_authenticated/projects/new")({
   head: () => ({
     meta: [
-      { title: "Nouveau projet — Stemroom" },
+      { title: "Nouveau projet — CollabLand" },
       { name: "description", content: "Publie une démo et choisis avec qui la partager." },
-      { property: "og:title", content: "Nouveau projet — Stemroom" },
+      { property: "og:title", content: "Nouveau projet — CollabLand" },
       { property: "og:description", content: "Publie une démo et choisis avec qui la partager." },
     ],
   }),

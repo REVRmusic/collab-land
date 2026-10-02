@@ -12,9 +12,9 @@ import { useFriends, type FriendProfile } from "@/hooks/use-friends";
 export const Route = createFileRoute("/_authenticated/friends")({
   head: () => ({
     meta: [
-      { title: "Amis — Stemroom" },
+      { title: "Amis — CollabLand" },
       { name: "description", content: "Trouve des producteurs et gère tes amis." },
-      { property: "og:title", content: "Amis — Stemroom" },
+      { property: "og:title", content: "Amis — CollabLand" },
       { property: "og:description", content: "Trouve des producteurs et gère tes amis." },
     ],
   }),
