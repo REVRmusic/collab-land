@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useMe } from "@/hooks/use-me";
 import { computePeaks, extOf, uploadFile } from "@/lib/media";
+import { compressAudio, AUDIO_ACCEPT } from "@/lib/audio-compress";
 import { useFriends } from "@/hooks/use-friends";
 import { UserAvatar } from "@/components/UserAvatar";
 import { Waveform } from "@/components/Waveform";
@@ -56,7 +57,7 @@ function NewProject() {
     try {
       const w = wave ?? (await computePeaks(audio));
       const [audioPath, coverPath] = await Promise.all([
-        uploadFile("audio", audio, extOf(audio, "mp3")),
+        compressAudio(audio, (p) => toast.loading(`Compression… ${p} %`, { id: "compress" })).then((c) => { toast.dismiss("compress"); return uploadFile("audio", c.blob, c.ext); }),
         cover ? uploadFile("covers", cover, extOf(cover, "jpg")) : Promise.resolve(null),
       ]);
       const { data: project, error } = await supabase
@@ -91,6 +92,7 @@ function NewProject() {
       toast.success("Projet publié");
       navigate({ to: "/projects/$id", params: { id: project.id } });
     } catch (err) {
+      toast.dismiss("compress");
       toast.error((err as Error).message || "Publication impossible");
     } finally {
       setBusy(false);
@@ -102,7 +104,7 @@ function NewProject() {
       <h1 className="text-3xl font-bold">Nouveau projet</h1>
 
       <label className="block cursor-pointer rounded-2xl border border-dashed border-border bg-card p-6 transition hover:border-primary/50">
-        <input type="file" accept="audio/*" hidden onChange={(e) => pickAudio(e.target.files?.[0])} />
+        <input type="file" accept={AUDIO_ACCEPT} hidden onChange={(e) => pickAudio(e.target.files?.[0])} />
         {audio ? (
           <div>
             <p className="mb-3 truncate text-sm font-medium">{audio.name}</p>

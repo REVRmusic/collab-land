@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useMe } from "@/hooks/use-me";
 import { extOf, uploadFile } from "@/lib/media";
 import { UserAvatar } from "@/components/UserAvatar";
+import { AvatarCropDialog } from "@/components/AvatarCropDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -50,13 +51,25 @@ function SettingsPage() {
     qc.invalidateQueries();
   };
 
-  const onAvatar = async (f?: File) => {
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
+  const onAvatar = (f?: File) => {
     if (!f) return;
+    if (!f.type.startsWith("image/")) { toast.error("Choisis une image"); return; }
+    setCropSrc(URL.createObjectURL(f));
+    if (fileRef.current) fileRef.current.value = "";
+  };
+  const closeCrop = () => {
+    if (cropSrc) URL.revokeObjectURL(cropSrc);
+    setCropSrc(null);
+  };
+  const saveAvatar = async (blob: Blob) => {
     try {
-      const path = await uploadFile("avatars", f, extOf(f, "jpg"));
-      await supabase.from("profiles").update({ avatar_url: path }).eq("id", uid!);
+      const path = await uploadFile("avatars", blob, extOf(blob, "jpg"));
+      const { error } = await supabase.from("profiles").update({ avatar_url: path }).eq("id", uid!);
+      if (error) throw error;
       qc.invalidateQueries();
       toast.success("Photo mise à jour");
+      closeCrop();
     } catch {
       toast.error("Envoi de la photo impossible");
     }
@@ -81,6 +94,7 @@ function SettingsPage() {
           <div>
             <Button type="button" variant="secondary" size="sm" onClick={() => fileRef.current?.click()}>Changer la photo</Button>
             <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => onAvatar(e.target.files?.[0])} />
+            <AvatarCropDialog src={cropSrc} onCancel={closeCrop} onDone={saveAvatar} />
           </div>
         </div>
         <div className="space-y-1.5">
