@@ -279,7 +279,8 @@ function Covers({ projectId, uid, isOwner, currentCover }: { projectId: string; 
     if (!f) return;
     setBusy(true);
     try {
-      const path = await uploadFile("covers", f, extOf(f, "jpg"));
+      const img = await compressImage(f);
+      const path = await uploadFile("covers", img, img.type === "image/jpeg" ? "jpg" : extOf(f, "jpg"));
       const { error } = await supabase.from("covers").insert({ project_id: projectId, author_id: uid, image_url: path, caption: caption || null });
       if (error) throw error;
       setCaption("");
