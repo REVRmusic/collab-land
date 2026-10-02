@@ -6,9 +6,9 @@ import { NotifLink, NotifRow, useNotifications } from "@/components/Notification
 export const Route = createFileRoute("/_authenticated/notifications")({
   head: () => ({
     meta: [
-      { title: "Notifications — Stemroom" },
+      { title: "Notifications — CollabLand" },
       { name: "description", content: "Toute l'activité de tes amis et de tes projets." },
-      { property: "og:title", content: "Notifications — Stemroom" },
+      { property: "og:title", content: "Notifications — CollabLand" },
       { property: "og:description", content: "Toute l'activité de tes amis et de tes projets." },
     ],
   }),

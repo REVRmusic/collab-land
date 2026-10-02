@@ -67,7 +67,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-      { title: "Stemroom — Collaboration entre producteurs" },
+      { title: "CollabLand — Collaboration entre producteurs" },
       { name: "description", content: "Partage tes projets, tes versions et tes stems avec tes amis producteurs." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

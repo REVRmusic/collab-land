@@ -11,9 +11,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 export const Route = createFileRoute("/_authenticated/u/$username")({
   head: ({ params }) => ({
     meta: [
-      { title: `@${params.username} — Stemroom` },
-      { name: "description", content: `La vitrine de projets de @${params.username} sur Stemroom.` },
-      { property: "og:title", content: `@${params.username} — Stemroom` },
+      { title: `@${params.username} — CollabLand` },
+      { name: "description", content: `La vitrine de projets de @${params.username} sur CollabLand.` },
+      { property: "og:title", content: `@${params.username} — CollabLand` },
       { property: "og:description", content: `La vitrine de projets de @${params.username}.` },
     ],
   }),

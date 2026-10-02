@@ -21,9 +21,9 @@ import { Textarea } from "@/components/ui/textarea";
 export const Route = createFileRoute("/_authenticated/projects/$id")({
   head: () => ({
     meta: [
-      { title: "Projet — Stemroom" },
+      { title: "Projet — CollabLand" },
       { name: "description", content: "Versions, discussion et covers d'un projet partagé." },
-      { property: "og:title", content: "Projet — Stemroom" },
+      { property: "og:title", content: "Projet — CollabLand" },
       { property: "og:description", content: "Versions, discussion et covers d'un projet partagé." },
     ],
   }),

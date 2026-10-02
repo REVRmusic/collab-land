@@ -11,7 +11,7 @@ export function Logo() {
       <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-primary-foreground">
         <AudioWaveform className="h-5 w-5" />
       </span>
-      <span className="font-display text-lg font-bold tracking-tight">Stemroom</span>
+      <span className="font-display text-lg font-bold tracking-tight">CollabLand</span>
     </Link>
   );
 }

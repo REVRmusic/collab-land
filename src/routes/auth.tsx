@@ -11,9 +11,9 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Connexion — Stemroom" },
-      { name: "description", content: "Connecte-toi ou crée ton compte producteur sur Stemroom." },
-      { property: "og:title", content: "Connexion — Stemroom" },
+      { title: "Connexion — CollabLand" },
+      { name: "description", content: "Connecte-toi ou crée ton compte producteur sur CollabLand." },
+      { property: "og:title", content: "Connexion — CollabLand" },
       { property: "og:description", content: "Connecte-toi ou crée ton compte producteur." },
     ],
   }),
