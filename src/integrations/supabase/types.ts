@@ -323,6 +323,45 @@ export type Database = {
           },
         ]
       }
+      project_invites: {
+        Row: {
+          created_at: string
+          created_by: string
+          project_id: string
+          revoked_at: string | null
+          token: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          project_id: string
+          revoked_at?: string | null
+          token?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          project_id?: string
+          revoked_at?: string | null
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_invites_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_invites_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_versions: {
         Row: {
           audio_url: string
@@ -395,6 +434,7 @@ export type Database = {
           id: string
           musical_key: string | null
           owner_id: string
+          showcase: boolean
           title: string
           updated_at: string
           visibility: string
@@ -410,6 +450,7 @@ export type Database = {
           id?: string
           musical_key?: string | null
           owner_id: string
+          showcase?: boolean
           title: string
           updated_at?: string
           visibility?: string
@@ -425,6 +466,7 @@ export type Database = {
           id?: string
           musical_key?: string | null
           owner_id?: string
+          showcase?: boolean
           title?: string
           updated_at?: string
           visibility?: string
@@ -564,6 +606,10 @@ export type Database = {
       message_author: { Args: { _mid: string }; Returns: string }
       message_project: { Args: { _mid: string }; Returns: string }
       project_participants: { Args: { _pid: string }; Returns: string[] }
+      get_or_create_project_invite: { Args: { _project_id: string }; Returns: string }
+      revoke_project_invite: { Args: { _project_id: string }; Returns: undefined }
+      accept_project_invite: { Args: { _token: string }; Returns: string }
+      is_showcase_media: { Args: { _bucket: string; _name: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never

@@ -6,9 +6,9 @@ import { useMe } from "@/hooks/use-me";
 import { NotificationBell } from "./NotificationBell";
 import { UserAvatar } from "./UserAvatar";
 
-export function Logo() {
+export function Logo({ to = "/feed" }: { to?: "/" | "/feed" }) {
   return (
-    <Link to="/feed" className="flex items-center gap-2">
+    <Link to={to} className="flex items-center gap-2">
       <img src={logoAsset.url} alt="CollabLand" className="h-8 w-8 rounded-xl" width={32} height={32} />
       <span className="font-display text-lg font-bold tracking-tight">CollabLand</span>
     </Link>

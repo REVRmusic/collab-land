@@ -15,6 +15,7 @@ import { cleanLink } from "@/lib/links";
 type P = {
   id: string; title: string; genre: string | null; bpm: number | null; musical_key: string | null;
   description: string | null; help_needed: string | null; download_url: string | null; visibility: string;
+  showcase?: boolean | null;
 };
 
 export function EditProjectDialog({ project, uid, memberIds, onSaved }: { project: P; uid: string; memberIds: string[]; onSaved: () => void }) {
@@ -26,6 +27,7 @@ export function EditProjectDialog({ project, uid, memberIds, onSaved }: { projec
   });
   const [f, setF] = useState(init);
   const [visibility, setVisibility] = useState(project.visibility as "friends" | "selected");
+  const [showcase, setShowcase] = useState(!!project.showcase);
   const [selected, setSelected] = useState<string[]>(memberIds);
   const [busy, setBusy] = useState(false);
 
@@ -36,7 +38,7 @@ export function EditProjectDialog({ project, uid, memberIds, onSaved }: { projec
     const { error } = await supabase.from("projects").update({
       title: f.title.trim(), genre: f.genre || null, bpm: f.bpm ? parseInt(f.bpm) : null, musical_key: f.musical_key || null,
       description: f.description || null, help_needed: f.help_needed.trim() || null,
-      visibility, updated_at: new Date().toISOString(),
+      visibility, showcase, updated_at: new Date().toISOString(),
     }).eq("id", project.id);
     if (error) { setBusy(false); toast.error("Enregistrement impossible"); return; }
     const want = visibility === "selected" ? selected : [];
@@ -51,7 +53,7 @@ export function EditProjectDialog({ project, uid, memberIds, onSaved }: { projec
   };
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (o) { setF(init()); setVisibility(project.visibility as "friends" | "selected"); setSelected(memberIds); } }}>
+    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (o) { setF(init()); setVisibility(project.visibility as "friends" | "selected"); setShowcase(!!project.showcase); setSelected(memberIds); } }}>
       <DialogTrigger asChild><Button variant="ghost"><Pencil className="h-4 w-4" />Modifier</Button></DialogTrigger>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader><DialogTitle>Modifier le projet</DialogTitle></DialogHeader>
@@ -64,6 +66,13 @@ export function EditProjectDialog({ project, uid, memberIds, onSaved }: { projec
           </div>
           <div className="space-y-1.5"><Label>Besoin d'aide sur… (optionnel)</Label><Input value={f.help_needed} onChange={(e) => setF({ ...f, help_needed: e.target.value })} placeholder="Besoin d'un drop plus impactant" /></div>
           <div className="space-y-1.5"><Label>Description</Label><Textarea rows={3} value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} /></div>
+          <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-border bg-card p-3">
+            <Checkbox checked={showcase} onCheckedChange={(c) => setShowcase(!!c)} className="mt-0.5" />
+            <span>
+              <span className="block text-sm font-medium">Sur ma vitrine publique</span>
+              <span className="text-xs text-muted-foreground">Visible sur /u/ton-pseudo sans connexion : cover + pré-écoute seulement.</span>
+            </span>
+          </label>
           <div className="space-y-2">
             <Label>Qui peut voir ce projet ?</Label>
             <div className="grid grid-cols-2 gap-2">

@@ -43,8 +43,8 @@ function Landing() {
   return (
     <div className="relative min-h-screen overflow-hidden" style={{ backgroundImage: "var(--gradient-glow)" }}>
       <header className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5">
-        <Logo />
-        <Link to="/auth" className="rounded-full border border-border px-4 py-2 text-sm font-medium hover:bg-accent">Connexion</Link>
+        <Logo to="/" />
+        <Link to="/auth" search={{}} className="rounded-full border border-border px-4 py-2 text-sm font-medium hover:bg-accent">Connexion</Link>
       </header>
       <section className="mx-auto max-w-6xl px-5 pb-16 pt-12 sm:pt-20">
         <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">Faites de la musique ensemble</p>
@@ -55,7 +55,7 @@ function Landing() {
           Dépose ton projet en cours, invite tes amis producteurs, et faites avancer le morceau ensemble — chaque version s'écoute, se commente et s'améliore, du premier brouillon au master.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
-          <Link to="/auth" className="rounded-full bg-primary px-6 py-3 font-semibold text-primary-foreground shadow-[0_10px_40px_-10px_var(--primary)] hover:brightness-110">
+          <Link to="/auth" search={{}} className="rounded-full bg-primary px-6 py-3 font-semibold text-primary-foreground shadow-[0_10px_40px_-10px_var(--primary)] hover:brightness-110">
             Commencer à collaborer
           </Link>
         </div>

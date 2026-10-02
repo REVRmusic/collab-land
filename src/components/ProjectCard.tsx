@@ -14,12 +14,13 @@ export type ProjectRow = {
   visibility: string;
   help_needed: string | null;
   updated_at: string;
+  showcase?: boolean | null;
   owner: { username: string; display_name: string | null; avatar_url: string | null } | null;
   project_versions: { id: string; version_number: number; audio_url: string; peaks: unknown; duration: number | null }[];
 };
 
 export const PROJECT_SELECT =
-  "id,title,genre,bpm,musical_key,cover_url,visibility,help_needed,updated_at,owner:profiles!projects_owner_id_fkey(username,display_name,avatar_url),project_versions(id,version_number,audio_url,peaks,duration)";
+  "id,title,genre,bpm,musical_key,cover_url,visibility,help_needed,showcase,updated_at,owner:profiles!projects_owner_id_fkey(username,display_name,avatar_url),project_versions(id,version_number,audio_url,peaks,duration)";
 
 export function latestVersion(p: ProjectRow) {
   return [...(p.project_versions ?? [])].sort((a, b) => b.version_number - a.version_number)[0];
@@ -53,6 +54,7 @@ export function ProjectCard({ p }: { p: ProjectRow }) {
             {p.bpm && <span>{p.bpm} BPM</span>}
             {p.musical_key && <span>{p.musical_key}</span>}
             {p.visibility === "selected" && <span className="flex items-center gap-1"><Lock className="h-3 w-3" />Privé</span>}
+            {p.showcase && <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-semibold text-primary">Vitrine</span>}
             <span>{timeAgo(p.updated_at)}</span>
           </div>
           {p.help_needed && (

@@ -9,4 +9,6 @@
 - [x] Adapter tous les champs et la discussion plein écran au téléphone, avec vocaux par maintien
 - [x] Annotations temporelles sur les versions
 - [x] Fil d'activité (versions, vocaux, annotations)
+- [x] Invitation projet par lien (hors amis)
+- [x] Vitrine publique partageable
 - [ ] Résumé quotidien par email — bloqué : domaine d'envoi d'emails à configurer par l'utilisateur

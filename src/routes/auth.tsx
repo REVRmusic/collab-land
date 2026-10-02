@@ -10,6 +10,11 @@ import { Button } from "@/components/ui/button";
 import { normalizeUsername, USERNAME_HINT, usernameError } from "@/lib/username";
 
 export const Route = createFileRoute("/auth")({
+  validateSearch: (s: Record<string, unknown>): { next?: string } => {
+    const n = s["next"];
+    if (typeof n === "string" && n.startsWith("/") && !n.startsWith("//")) return { next: n };
+    return {};
+  },
   head: () => ({
     meta: [
       { title: "Connexion — CollabLand" },
@@ -27,6 +32,7 @@ type Mode = "login" | "signup" | "forgot" | "reset";
 
 function AuthPage() {
   const navigate = useNavigate();
+  const { next } = Route.useSearch();
   const [mode, setMode] = useState<Mode>("login");
   const recovering = useRef(false);
   const [email, setEmail] = useState("");
@@ -39,9 +45,23 @@ function AuthPage() {
   const [sent, setSent] = useState(false);
   const [resetSent, setResetSent] = useState(false);
 
+  const afterAuthPath = next || "/feed";
+
+  const goAfterAuth = () => {
+    if (next?.startsWith("/invite/")) {
+      navigate({ to: "/invite/$token", params: { token: next.slice("/invite/".length) }, replace: true });
+      return;
+    }
+    if (next?.startsWith("/u/")) {
+      navigate({ to: "/u/$username", params: { username: next.slice("/u/".length) }, replace: true });
+      return;
+    }
+    navigate({ to: "/feed", replace: true });
+  };
+
   useEffect(() => {
-    const goFeedIfReady = (session: unknown) => {
-      if (session && !recovering.current) navigate({ to: "/feed", replace: true });
+    const goReady = (session: unknown) => {
+      if (session && !recovering.current) goAfterAuth();
     };
     const { data } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "PASSWORD_RECOVERY") {
@@ -53,11 +73,12 @@ function AuthPage() {
         setConfirm("");
         return;
       }
-      goFeedIfReady(session);
+      goReady(session);
     });
-    supabase.auth.getSession().then(({ data: s }) => goFeedIfReady(s.session));
+    supabase.auth.getSession().then(({ data: s }) => goReady(s.session));
     return () => data.subscription.unsubscribe();
-  }, [navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navigate, next]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,7 +100,7 @@ function AuthPage() {
         if (error) throw error;
         recovering.current = false;
         toast.success("Mot de passe mis à jour");
-        navigate({ to: "/feed", replace: true });
+        goAfterAuth();
       } else {
         if (password.length < 8) throw new Error("Le mot de passe doit faire au moins 8 caractères");
         if (password !== confirm) throw new Error("Les mots de passe ne correspondent pas");
@@ -90,7 +111,7 @@ function AuthPage() {
         const { error } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: window.location.origin + "/feed", data: { username: u } },
+          options: { emailRedirectTo: window.location.origin + afterAuthPath, data: { username: u } },
         });
         if (error) throw error;
         setSent(true);
@@ -103,7 +124,11 @@ function AuthPage() {
   };
 
   const google = async () => {
-    const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin + "/auth" });
+    const redirect =
+      next
+        ? `${window.location.origin}/auth?next=${encodeURIComponent(next)}`
+        : `${window.location.origin}/auth`;
+    const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: redirect });
     if (r.error) toast.error("Connexion Google impossible");
   };
 

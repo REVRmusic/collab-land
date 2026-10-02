@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Download, GitBranch, ImagePlus, Layers, LifeBuoy, Lock, MessageCircle, Palette, Plus, Star, Trash2, Users } from "lucide-react";
 import { linkHost, cleanLink } from "@/lib/links";
 import { EditProjectDialog, EditVersionDialog } from "@/components/project/EditProjectDialog";
+import { ProjectInviteDialog } from "@/components/project/ProjectInviteDialog";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useMe } from "@/hooks/use-me";
@@ -134,6 +135,7 @@ function ProjectPage() {
               <Button variant="ghost" className="text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" />Supprimer</Button>
             </ConfirmDelete>
           )}
+          {isOwner && <ProjectInviteDialog projectId={id} />}
           {isOwner && uid && <EditProjectDialog project={p} uid={uid} memberIds={p.project_members.map((m) => m.user.id)} onSaved={() => qc.invalidateQueries()} />}
           {p.project_members.length > 0 && (
             <div className="ml-auto flex items-center -space-x-2">

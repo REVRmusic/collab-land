@@ -14,6 +14,8 @@ L’interface est pensée pour l’ordinateur et le téléphone.
 - **Discussion.** Un fil par projet : messages écrits, messages vocaux, et réponses à un vocal.
 - **Covers.** Chacun peut proposer une ou plusieurs pochettes. Le propriétaire choisit la cover principale.
 - **Amis.** Tu ajoutes d’autres producteurs et tu suis leurs projets dans le fil d’actualité.
+- **Invitation par lien.** Tu peux inviter quelqu’un hors de ton cercle : après connexion, il devient collaborateur du projet.
+- **Vitrine publique.** Ton profil `/u/pseudo` est partageable ; les projets cochés « Sur ma vitrine » montrent cover + pré-écoute sans compte.
 - **Notifications.** Une cloche signale une nouvelle version, un vocal ou une demande. Un e-mail récapitulatif peut partir une fois par jour.
 
 ## Lancer l’app en local
