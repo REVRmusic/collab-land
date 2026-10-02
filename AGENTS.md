@@ -14,3 +14,4 @@
 - Waveform peaks are computed client-side at upload (Web Audio) and stored as JSON so players render instantly.
 - Project visibility is enforced by the can_view_project() SQL function used in every RLS policy on project-scoped tables.
 - Notifications are created only by DB triggers; the client never inserts them.
+- On mobile, project discussions use a full-screen overlay with a fixed composer so messaging remains reachable above the keyboard.
