@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { GitBranch, Lock } from "lucide-react";
+import { GitBranch, LifeBuoy, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useMe } from "@/hooks/use-me";
 import { timeAgo } from "@/lib/media";
@@ -82,7 +82,7 @@ function ProjectsPage() {
                     par {p.latest.author.id === uid ? "toi" : p.latest.author.display_name || p.latest.author.username} · {timeAgo(p.latest.created_at)}
                   </p>
                 )}
-                {p.help_needed && <p className="mt-1 truncate text-xs font-medium text-primary">Besoin d'aide : {p.help_needed}</p>}
+                {p.help_needed && <p className="mt-1 flex items-center gap-1 truncate text-xs font-medium text-primary"><LifeBuoy className="h-3 w-3 shrink-0" /><span className="truncate">{p.help_needed}</span></p>}
                 <div className="mt-2 hidden sm:block">{p.latest && <TrackPlayer path={p.latest.audio_url} peaks={p.latest.peaks} duration={p.latest.duration} size="sm" height={44} />}</div>
               </div>
             </div>
