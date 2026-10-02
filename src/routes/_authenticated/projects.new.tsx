@@ -132,7 +132,7 @@ function NewProject() {
       <div className="grid gap-4 sm:grid-cols-[140px_1fr]">
         <label className="relative grid aspect-square cursor-pointer place-items-center overflow-hidden rounded-xl border border-dashed border-border bg-card">
           <input type="file" accept="image/*" hidden onChange={(e) => setCover(e.target.files?.[0] ?? null)} />
-          {cover ? <img src={URL.createObjectURL(cover)} alt="" className="h-full w-full object-cover" /> : (
+          {cover ? <img src={URL.createObjectURL(cover)} alt="" className="absolute inset-0 h-full w-full object-cover" /> : (
             <span className="flex flex-col items-center gap-1 text-xs text-muted-foreground"><ImagePlus className="h-6 w-6" />Cover</span>
           )}
         </label>

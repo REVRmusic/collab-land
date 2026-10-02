@@ -21,11 +21,11 @@ export function UserAvatar({ profile, className = "h-9 w-9" }: { profile: P; cla
 export function CoverImage({ path, className = "" }: { path?: string | null; className?: string }) {
   const url = useMediaUrl("covers", path);
   return (
-    <div className={`overflow-hidden bg-surface-2 ${className}`}>
+    <div className={`relative aspect-square shrink-0 self-start overflow-hidden bg-surface-2 ${className}`}>
       {url ? (
-        <img src={url} alt="" className="h-full w-full object-cover" />
+        <img src={url} alt="" className="absolute inset-0 h-full w-full object-cover" />
       ) : (
-        <div className="h-full w-full bg-[radial-gradient(circle_at_30%_20%,var(--primary),transparent_55%),radial-gradient(circle_at_80%_90%,var(--voice),transparent_50%)] opacity-60" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,var(--primary),transparent_55%),radial-gradient(circle_at_80%_90%,var(--voice),transparent_50%)] opacity-60" />
       )}
     </div>
   );
