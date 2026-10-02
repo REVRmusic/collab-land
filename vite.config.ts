@@ -23,7 +23,6 @@ export default defineConfig({
         "@radix-ui/react-dropdown-menu",
         "@radix-ui/react-hover-card",
         "@radix-ui/react-toggle",
-        "@radix-ui/react-dropdown-menu",
         "@radix-ui/react-label",
         "@radix-ui/react-popover",
         "@radix-ui/react-slot",
