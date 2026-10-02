@@ -1,9 +1,9 @@
 import { Link } from "@tanstack/react-router";
-import { Bell, Home, Plus, Settings, User, Users } from "lucide-react";
+import { FolderKanban, Home, Plus, Settings, User, Users } from "lucide-react";
 import logoAsset from "@/assets/collabland-logo.png.asset.json";
 import type { ReactNode } from "react";
 import { useMe } from "@/hooks/use-me";
-import { NotificationBell, useNotifications } from "./NotificationBell";
+import { NotificationBell } from "./NotificationBell";
 import { UserAvatar } from "./UserAvatar";
 
 export function Logo() {
@@ -20,7 +20,6 @@ const activeCls = { className: "bg-sidebar-accent !text-foreground" };
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { uid, profile } = useMe();
-  const { unread } = useNotifications(uid);
   const username = profile?.username ?? "";
   return (
     <div className="min-h-screen">
@@ -29,6 +28,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <Logo />
         <nav className="mt-8 flex flex-col gap-1">
           <Link to="/feed" className={navCls} activeProps={activeCls}><Home className="h-4 w-4" />Accueil</Link>
+          <Link to="/projects" className={navCls} activeProps={activeCls}><FolderKanban className="h-4 w-4" />Projets</Link>
           <Link to="/friends" className={navCls} activeProps={activeCls}><Users className="h-4 w-4" />Amis</Link>
           {username && (
             <Link to="/u/$username" params={{ username }} className={navCls} activeProps={activeCls}><User className="h-4 w-4" />Ma vitrine</Link>
@@ -53,7 +53,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="lg:hidden"><Logo /></div>
           <div className="hidden lg:block" />
           <div className="flex items-center gap-1">
-            <div className="hidden lg:block"><NotificationBell uid={uid ?? undefined} /></div>
+            <NotificationBell uid={uid ?? undefined} />
             <Link to="/settings" className="lg:hidden"><UserAvatar profile={profile} className="h-8 w-8" /></Link>
           </div>
         </div>
@@ -66,12 +66,9 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* Mobile tab bar */}
       <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-border bg-background/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden">
         <Link to="/feed" className="flex flex-col items-center gap-0.5 py-2 text-[11px] text-muted-foreground" activeProps={{ className: "!text-primary" }}><Home className="h-5 w-5" />Accueil</Link>
-        <Link to="/friends" className="flex flex-col items-center gap-0.5 py-2 text-[11px] text-muted-foreground" activeProps={{ className: "!text-primary" }}><Users className="h-5 w-5" />Amis</Link>
+        <Link to="/projects" className="flex flex-col items-center gap-0.5 py-2 text-[11px] text-muted-foreground" activeProps={{ className: "!text-primary" }}><FolderKanban className="h-5 w-5" />Projets</Link>
         <Link to="/projects/new" className="flex items-center justify-center"><span className="grid h-11 w-11 place-items-center rounded-full bg-primary text-primary-foreground"><Plus className="h-5 w-5" /></span></Link>
-        <Link to="/notifications" className="relative flex flex-col items-center gap-0.5 py-2 text-[11px] text-muted-foreground" activeProps={{ className: "!text-primary" }}>
-          <Bell className="h-5 w-5" />Alertes
-          {unread > 0 && <span className="absolute right-[28%] top-1.5 h-2 w-2 rounded-full bg-primary" />}
-        </Link>
+        <Link to="/friends" className="flex flex-col items-center gap-0.5 py-2 text-[11px] text-muted-foreground" activeProps={{ className: "!text-primary" }}><Users className="h-5 w-5" />Amis</Link>
         {username ? (
           <Link to="/u/$username" params={{ username }} className="flex flex-col items-center gap-0.5 py-2 text-[11px] text-muted-foreground" activeProps={{ className: "!text-primary" }}><User className="h-5 w-5" />Vitrine</Link>
         ) : <span />}
