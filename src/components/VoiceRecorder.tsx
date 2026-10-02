@@ -16,6 +16,7 @@ export function VoiceRecorder({
   const [elapsed, setElapsed] = useState(0);
   const [levels, setLevels] = useState<number[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [recorderReady, setRecorderReady] = useState(false);
   const rec = useRef<MediaRecorder | null>(null);
   const chunks = useRef<Blob[]>([]);
   const cancelled = useRef(false);
@@ -44,6 +45,7 @@ export function VoiceRecorder({
         };
         r.start();
         rec.current = r;
+        setRecorderReady(true);
         ctx = new AudioContext();
         const an = ctx.createAnalyser();
         an.fftSize = 256;
@@ -75,10 +77,10 @@ export function VoiceRecorder({
   }, [onDone]);
 
   useEffect(() => {
-    if (finishAction && rec.current?.state === "recording") finish(finishAction);
+    if (finishAction && recorderReady && rec.current?.state === "recording") finish(finishAction);
     // finish intentionally reads the current recorder instance.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [finishAction]);
+  }, [finishAction, recorderReady]);
 
   if (error)
     return (

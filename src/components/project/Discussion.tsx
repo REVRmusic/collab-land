@@ -175,6 +175,8 @@ export function Discussion({ projectId, uid, projectTitle, mobileOpen, onMobileC
   const onVoice = useCallback(
     async (blob: Blob) => {
       setRecording(false);
+      setVoiceLocked(false);
+      setFinishAction(null);
       setSending(true);
       try {
         const w = await computePeaks(blob, 48);

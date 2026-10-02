@@ -144,7 +144,16 @@ function ProjectPage() {
           <TabsTrigger value="versions"><GitBranch className="h-4 w-4" />Versions ({versions.data?.length ?? 0})</TabsTrigger>
           <TabsTrigger value="covers"><Palette className="h-4 w-4" />Covers</TabsTrigger>
         </TabsList>
-        <TabsContent value="discussion" className="mt-4">{uid && <Discussion projectId={id} uid={uid} projectTitle={p.title} mobileOpen={mobileDiscussionOpen} onMobileClose={() => setMobileDiscussionOpen(false)} />}</TabsContent>
+        <TabsContent value="discussion" className="mt-4">
+          {uid && (
+            <>
+              <Button className="h-12 w-full md:hidden" onClick={() => setMobileDiscussionOpen(true)}>
+                <MessageCircle className="h-4 w-4" />Ouvrir la discussion
+              </Button>
+              <Discussion projectId={id} uid={uid} projectTitle={p.title} mobileOpen={mobileDiscussionOpen} onMobileClose={() => setMobileDiscussionOpen(false)} />
+            </>
+          )}
+        </TabsContent>
         <TabsContent value="versions" className="mt-4">
           <ol className="relative space-y-4 border-l border-border pl-6">
             {versions.data?.map((v, i) => (
