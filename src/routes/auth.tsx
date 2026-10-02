@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,6 +15,8 @@ export const Route = createFileRoute("/auth")({
       { name: "description", content: "Connecte-toi ou crée ton compte producteur sur CollabLand." },
       { property: "og:title", content: "Connexion — CollabLand" },
       { property: "og:description", content: "Connecte-toi ou crée ton compte producteur." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: AuthPage,
@@ -26,6 +28,9 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [accepted, setAccepted] = useState(false);
+  const mismatch = mode === "signup" && confirm.length > 0 && confirm !== password;
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
 
@@ -43,6 +48,10 @@ function AuthPage() {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
       } else {
+        if (password.length < 8) throw new Error("Le mot de passe doit faire au moins 8 caractères");
+        if (password !== confirm) throw new Error("Les mots de passe ne correspondent pas");
+        if (!accepted) throw new Error("Accepte les conditions d'utilisation pour continuer");
+        if (!/^[a-zA-Z0-9_]{3,30}$/.test(username)) throw new Error("Nom d'utilisateur : 3 à 30 lettres, chiffres ou _");
         const { error } = await supabase.auth.signUp({
           email,
           password,
@@ -93,9 +102,22 @@ function AuthPage() {
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="p">Mot de passe</Label>
-                  <Input id="p" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
+                  <Input id="p" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={mode === "signup" ? 8 : 6} />
                 </div>
-                <Button type="submit" className="w-full" disabled={busy}>
+                {mode === "signup" && (
+                  <>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="pc">Confirmer le mot de passe</Label>
+                      <Input id="pc" type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} required aria-invalid={mismatch} />
+                      {mismatch && <p className="text-xs text-destructive">Les mots de passe ne correspondent pas</p>}
+                    </div>
+                    <label className="flex items-start gap-2 text-xs text-muted-foreground">
+                      <input type="checkbox" className="mt-0.5 accent-[var(--primary)]" checked={accepted} onChange={(e) => setAccepted(e.target.checked)} required />
+                      <span>J'accepte les <Link to="/terms" target="_blank" className="text-primary underline">conditions d'utilisation</Link> et j'ai lu les <Link to="/legal" target="_blank" className="text-primary underline">mentions légales</Link>.</span>
+                    </label>
+                  </>
+                )}
+                <Button type="submit" className="w-full" disabled={busy || (mode === "signup" && (confirm !== password || !accepted))}>
                   {mode === "login" ? "Se connecter" : "Créer mon compte"}
                 </Button>
               </form>
@@ -108,6 +130,9 @@ function AuthPage() {
             </>
           )}
         </div>
+        <p className="mt-4 text-center text-xs text-muted-foreground">
+          <Link to="/terms" className="hover:text-foreground">Conditions d'utilisation</Link> · <Link to="/legal" className="hover:text-foreground">Mentions légales</Link>
+        </p>
       </div>
     </div>
   );

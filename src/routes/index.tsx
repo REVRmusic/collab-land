@@ -1,3 +1,4 @@
+import { LegalFooter } from "@/components/LegalPage";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo } from "react";
 import { GitBranch, Lock, Mic, Palette, Bell, Download } from "lucide-react";
@@ -75,6 +76,7 @@ function Landing() {
           </div>
         ))}
       </section>
+      <LegalFooter />
     </div>
   );
 }
