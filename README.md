@@ -1,26 +1,32 @@
-# Collab Land
+# CollabLand
 
-Je veux que tu génères une application web qui permet entre producteurs de musiques de se partager des projets et de collaborer. L'idée c'est que chaque producteur à une vitrine sur son profil. Il doit y avoir une pré-écoute donc un extrait démo du projet puis en cliquant dessus on doit accéder à l'historique du projet (chaque nouvelle version ainsi que sa pré-écoute). Si un projet nous plait on doit pouvoir demander les STEMS ou télécharger le projet via un lien qui y est associé (wetransfer/swisstransfer/google drive/dropbox/iCloud Drive). On doit pouvoir choisir à qui on partage un projet (tous nos amis ou uniquement certains), ainsi certains projets ne sont visibles que pour ceux qu'on souhaite voir collaborer dessus. Il doit y avoir un fil de discussion par projet qui permet de suivre les avancements et chaque producteur peut y publier une nouvelle version de ce projet. Pour chaque projet chacun peut aussi décider de publier une ou plusieurs COVER afin que chacun puisse proposer ou travailler sur des artworks. Fais en sorte d'avoir un design poussé, notamment sur les barres de lectures des fichiers audio (extraits de morceaux) afin qu'il y ait une Prévisualisation de la hauteur du son (à la manière de soundcloud). On doit via l'espace de discussion s'échanger des messages vocaux mais aussi répondre à des messages vocaux à la manière de Instagram. On doit pouvoir personnaliser son nom d'utilisateur, mais aussi sa photo de profil. On doit également pouvoir ajouter en ami d'autres DJ sur l'application et enfin mets en place un système de Notifications qui nous informe lorsqu'un ami ajoute un nouveau projet ou une nouvelle version sur un projet auquel on participe. Ce système de Notifications doit se manifester sous forme de cloches de Notifications dans l'interface principale, mais aussi via des notifications par mail une fois par jour qui résume chaque nouveauté. Je veux un design global moderne et professionnel et une UI et UX responsive et adaptée à un affichage sur ordinateur ou téléphone.
+CollabLand est une application web pour les producteurs de musique. Chacun y dépose un morceau en cours, le partage à son cercle, et le fait avancer ensemble : versions, pré-écoute, discussion, stems et artworks.
 
-This project was built with [Lovable](https://lovable.dev).
+L’interface est pensée pour l’ordinateur et le téléphone.
 
-**Live app**: https://collab-land.lovable.app
+## Ce que tu peux faire
 
-## Build with Lovable
+- **Vitrine.** Chaque producteur a un profil public dans l’app : nom d’artiste, photo, bio, et les projets qu’il choisit de montrer.
+- **Projet.** Un morceau en cours, avec son genre, son BPM, sa tonalité, et une cover affichée au format carré.
+- **Versions.** Chaque nouvelle version (V1, V2, V3…) a son extrait démo. La lecture affiche la forme d’onde, comme sur SoundCloud.
+- **Visibilité.** Un projet est ouvert à tous tes amis, ou seulement aux collaborateurs que tu choisis.
+- **Fichiers.** Chaque version peut avoir un lien de téléchargement du projet et un lien séparé pour les stems (iCloud, Drive, Dropbox, WeTransfer, SwissTransfer…). Quelqu’un qui n’a pas encore le lien peut demander les stems.
+- **Discussion.** Un fil par projet : messages écrits, messages vocaux, et réponses à un vocal.
+- **Covers.** Chacun peut proposer une ou plusieurs pochettes. Le propriétaire choisit la cover principale.
+- **Amis.** Tu ajoutes d’autres producteurs et tu suis leurs projets dans le fil d’actualité.
+- **Notifications.** Une cloche signale une nouvelle version, un vocal ou une demande. Un e-mail récapitulatif peut partir une fois par jour.
 
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/72f1b599-d696-4c43-a055-e4ecd0b1264e).
+## Lancer l’app en local
 
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
-
-## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+Il faut [Node.js](https://nodejs.org) et npm.
 
 ```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
+git clone https://github.com/REVRmusic/collab-land.git
+cd collab-land
+npm install
 npm run dev
 ```
+
+L’app s’ouvre sur [http://localhost:8080](http://localhost:8080).
+
+Le fichier `.env` à la racine contient la connexion à la base (Supabase). Sans lui, l’app ne démarre pas. Pour arrêter le serveur : `Ctrl + C` dans le terminal.
