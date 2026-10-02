@@ -50,6 +50,7 @@ function ProjectPage() {
   const { id } = Route.useParams();
   const { uid } = useMe();
   const qc = useQueryClient();
+  const navigate = useNavigate();
 
   const project = useQuery({
     queryKey: ["project", id],
