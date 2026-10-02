@@ -8,10 +8,10 @@ import { Waveform } from "@/components/Waveform";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "CollabLand — Le studio partagé des producteurs" },
-      { name: "description", content: "Vitrine de projets, historique des versions, stems, covers et vocaux : collabore avec tes amis producteurs." },
-      { property: "og:title", content: "CollabLand — Le studio partagé des producteurs" },
-      { property: "og:description", content: "Vitrine de projets, historique des versions, stems, covers et vocaux entre producteurs." },
+      { title: "CollabLand — Fais tes morceaux à plusieurs" },
+      { name: "description", content: "Partage tes projets en cours, échange des versions et des vocaux avec tes amis producteurs, et faites avancer le morceau ensemble." },
+      { property: "og:title", content: "CollabLand — Fais tes morceaux à plusieurs" },
+      { property: "og:description", content: "Partage tes projets en cours, échange des versions et des vocaux avec tes amis producteurs, et faites avancer le morceau ensemble." },
     ],
   }),
   component: Landing,
@@ -31,12 +31,12 @@ function Landing() {
   );
 
   const features = [
-    { icon: GitBranch, t: "Historique des versions", d: "Chaque V2, V3… avec sa pré-écoute et ses notes." },
-    { icon: Lock, t: "Partage ciblé", d: "Tous tes amis, ou seulement ceux que tu choisis." },
-    { icon: Mic, t: "Vocaux dans le fil", d: "Envoie et réponds en vocal, comme sur Instagram." },
-    { icon: Download, t: "Stems & liens", d: "Demande les stems ou récupère le projet en un clic." },
-    { icon: Palette, t: "Covers", d: "Propose des artworks et choisis la cover finale." },
-    { icon: Bell, t: "Notifications", d: "Cloche en temps réel et résumé quotidien." },
+    { icon: GitBranch, t: "Faites avancer le morceau", d: "Chaque V2, V3… avec sa pré-écoute : tout le monde suit où en est le projet." },
+    { icon: Lock, t: "À plusieurs, à ta manière", d: "Ouvre le projet à tous tes amis ou seulement à ceux que tu choisis." },
+    { icon: Mic, t: "Discutez, en vocal", d: "Réagis à une version d'un simple vocal, comme sur Instagram." },
+    { icon: Download, t: "Échangez les stems", d: "Demande les stems ou récupère la dernière version en un clic." },
+    { icon: Palette, t: "Construisez l'identité", d: "Chacun propose des covers, le morceau trouve sa pochette." },
+    { icon: Bell, t: "Personne ne rate un passage", d: "Cloche en temps réel : une nouvelle version, un vocal, et chacun le sait." },
   ];
 
   return (
@@ -46,21 +46,21 @@ function Landing() {
         <Link to="/auth" className="rounded-full border border-border px-4 py-2 text-sm font-medium hover:bg-accent">Connexion</Link>
       </header>
       <section className="mx-auto max-w-6xl px-5 pb-16 pt-12 sm:pt-20">
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">Pour producteurs & DJs</p>
+        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">Faites de la musique ensemble</p>
         <h1 className="mt-4 max-w-3xl text-4xl font-bold leading-[1.05] sm:text-6xl">
-          Ton studio partagé.<br />Chaque idée, chaque version.
+          Un morceau ne se fait jamais seul.<br />Fais-le évoluer à plusieurs.
         </h1>
         <p className="mt-5 max-w-xl text-lg text-muted-foreground">
-          Montre tes démos dans ta vitrine, fais évoluer les projets à plusieurs, échange des vocaux et récupère les stems.
+          Dépose ton projet en cours, invite tes amis producteurs, et faites avancer le morceau ensemble — chaque version s'écoute, se commente et s'améliore, du premier brouillon au master.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
           <Link to="/auth" className="rounded-full bg-primary px-6 py-3 font-semibold text-primary-foreground shadow-[0_10px_40px_-10px_var(--primary)] hover:brightness-110">
-            Créer mon studio
+            Commencer à collaborer
           </Link>
         </div>
         <div className="mt-14 rounded-2xl border border-border bg-card/70 p-5 backdrop-blur">
           <div className="mb-3 flex items-center justify-between text-sm">
-            <span className="font-display font-semibold">Night Drive — V4</span>
+            <span className="font-display font-semibold">Night Drive — V4 par Max</span>
             <span className="text-muted-foreground">124 BPM · A min</span>
           </div>
           <Waveform peaks={peaks} progress={0.38} height={90} />
