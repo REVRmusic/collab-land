@@ -4,6 +4,7 @@
 - [x] Projets, visibilité, versions, lecteur waveform
 - [x] Discussion texte + vocaux avec réponses
 - [x] Covers, demandes de STEMS, liens de téléchargement
+- [x] Liens de STEMS distincts pour chaque version
 - [x] Notifications in-app (cloche temps réel)
 - [x] Adapter tous les champs et la discussion plein écran au téléphone, avec vocaux par maintien
 - [ ] Résumé quotidien par email — bloqué : domaine d'envoi d'emails à configurer par l'utilisateur
