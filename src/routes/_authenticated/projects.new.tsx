@@ -33,7 +33,7 @@ function NewProject() {
   const friends = useFriends(uid);
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const [f, setF] = useState({ title: "", genre: "", bpm: "", musical_key: "", description: "", download_url: "" });
+  const [f, setF] = useState({ title: "", genre: "", bpm: "", musical_key: "", description: "", help_needed: "", download_url: "" });
   const [audio, setAudio] = useState<File | null>(null);
   const [wave, setWave] = useState<{ peaks: number[]; duration: number } | null>(null);
   const [cover, setCover] = useState<File | null>(null);
@@ -69,6 +69,7 @@ function NewProject() {
           bpm: f.bpm ? parseInt(f.bpm) : null,
           musical_key: f.musical_key || null,
           description: f.description || null,
+          help_needed: f.help_needed.trim() || null,
           download_url: f.download_url || null,
           cover_url: coverPath,
           visibility,
@@ -137,6 +138,7 @@ function NewProject() {
         </div>
       </div>
 
+      <div className="space-y-1.5"><Label>Besoin d'aide sur… (optionnel)</Label><Input value={f.help_needed} onChange={(e) => setF({ ...f, help_needed: e.target.value })} placeholder="Besoin d'un drop plus impactant" /></div>
       <div className="space-y-1.5"><Label>Description</Label><Textarea rows={3} value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} /></div>
       <div className="space-y-1.5">
         <Label>Lien de téléchargement du projet (optionnel)</Label>
