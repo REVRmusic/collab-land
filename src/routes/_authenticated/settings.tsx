@@ -8,6 +8,7 @@ import { useMe } from "@/hooks/use-me";
 import { extOf, uploadFile } from "@/lib/media";
 import { UserAvatar } from "@/components/UserAvatar";
 import { AvatarCropDialog } from "@/components/AvatarCropDialog";
+import { normalizeUsername, USERNAME_HINT, usernameError } from "@/lib/username";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -41,8 +42,9 @@ function SettingsPage() {
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
-    const username = form.username.trim().toLowerCase();
-    if (!/^[a-z0-9_.]{3,24}$/.test(username)) { toast.error("Nom d'utilisateur : 3 à 24 caractères (lettres, chiffres, _ et .)"); return; }
+    const username = normalizeUsername(form.username);
+    const err = usernameError(username);
+    if (err) { toast.error(err); return; }
     setBusy(true);
     const { error } = await supabase.from("profiles").update({ ...form, username }).eq("id", uid!);
     setBusy(false);
@@ -99,7 +101,8 @@ function SettingsPage() {
         </div>
         <div className="space-y-1.5">
           <Label>Nom d'utilisateur</Label>
-          <Input value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} />
+          <Input value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} maxLength={24} />
+          <p className="text-xs text-muted-foreground">{USERNAME_HINT}</p>
         </div>
         <div className="space-y-1.5">
           <Label>Nom d'artiste</Label>

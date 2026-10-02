@@ -263,7 +263,8 @@ function StemRequests({ projectId }: { projectId: string }) {
   const pending = (data ?? []).filter((r) => r.status === "pending");
   if (!pending.length) return null;
   const answer = async (rid: string, status: "accepted" | "declined") => {
-    await supabase.from("stem_requests").update({ status }).eq("id", rid);
+    const { error } = await supabase.from("stem_requests").update({ status }).eq("id", rid);
+    if (error) { toast.error("Mise à jour impossible"); return; }
     qc.invalidateQueries({ queryKey: ["stems", projectId] });
     toast.success(status === "accepted" ? "Demande acceptée — partage le lien des stems dans la discussion" : "Demande refusée");
   };
@@ -346,7 +347,9 @@ function Covers({ projectId, uid, isOwner, currentCover }: { projectId: string; 
               <div className="mt-2 flex gap-1">
                 {isOwner && currentCover !== c.image_url && (
                   <Button size="sm" variant="secondary" onClick={async () => {
-                    await supabase.from("projects").update({ cover_url: c.image_url }).eq("id", projectId);
+                    const { error } = await supabase.from("projects").update({ cover_url: c.image_url }).eq("id", projectId);
+                    if (error) { toast.error("Impossible de définir la cover principale"); return; }
+                    toast.success("Cover principale mise à jour");
                     qc.invalidateQueries();
                   }}>Définir principale</Button>
                 )}

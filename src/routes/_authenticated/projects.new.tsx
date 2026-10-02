@@ -6,7 +6,7 @@ import { ImagePlus, Music, Users, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useMe } from "@/hooks/use-me";
-import { compressImage, computePeaks, extOf, uploadFile } from "@/lib/media";
+import { compressImage, computePeaks, extOf, removeFiles, uploadFile } from "@/lib/media";
 import { compressAudio, AUDIO_ACCEPT } from "@/lib/audio-compress";
 import { useFriends } from "@/hooks/use-friends";
 import { UserAvatar } from "@/components/UserAvatar";
@@ -44,15 +44,22 @@ function NewProject() {
 
   const pickAudio = async (file?: File) => {
     if (!file) return;
-    setAudio(file);
+    setAudio(null);
     setWave(null);
-    setWave(await computePeaks(file));
-    if (!f.title) setF((s) => ({ ...s, title: file.name.replace(/\.[^.]+$/, "") }));
+    try {
+      const w = await computePeaks(file);
+      setAudio(file);
+      setWave(w);
+      if (!f.title) setF((s) => ({ ...s, title: file.name.replace(/\.[^.]+$/, "") }));
+    } catch (err) {
+      toast.error((err as Error).message);
+    }
   };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!audio || !uid) { toast.error("Ajoute un extrait audio"); return; }
+    if (!wave) { toast.error("Attends la fin de l'analyse audio"); return; }
     if (visibility === "selected" && selected.length === 0) { toast.error("Choisis au moins un ami"); return; }
     let download_url: string | null;
     let stems_url: string | null;
@@ -61,9 +68,11 @@ function NewProject() {
       stems_url = cleanLink(f.stems_url);
     } catch (err) { toast.error((err as Error).message); return; }
     setBusy(true);
+    let projectId: string | null = null;
+    let audioPath: string | null = null;
+    let coverPath: string | null = null;
     try {
-      const w = wave ?? (await computePeaks(audio));
-      const [audioPath, coverPath] = await Promise.all([
+      [audioPath, coverPath] = await Promise.all([
         compressAudio(audio, (p) => toast.loading(`Compression… ${p} %`, { id: "compress" })).then((c) => { toast.dismiss("compress"); return uploadFile("audio", c.blob, c.ext); }),
         cover ? compressImage(cover).then((b) => uploadFile("covers", b, b.type === "image/jpeg" ? "jpg" : extOf(cover, "jpg"))) : Promise.resolve(null),
       ]);
@@ -83,25 +92,39 @@ function NewProject() {
         .select("id")
         .single();
       if (error) throw error;
-      if (visibility === "selected")
-        await supabase.from("project_members").insert(selected.map((user_id) => ({ project_id: project.id, user_id })));
-      await supabase.from("project_versions").insert({
+      projectId = project.id;
+      if (visibility === "selected") {
+        const { error: memErr } = await supabase
+          .from("project_members")
+          .insert(selected.map((user_id) => ({ project_id: project.id, user_id })));
+        if (memErr) throw memErr;
+      }
+      const { error: verErr } = await supabase.from("project_versions").insert({
         project_id: project.id,
         author_id: uid,
         title: "Démo",
         notes: "Première version",
         audio_url: audioPath,
-        peaks: w.peaks,
-        duration: w.duration,
+        peaks: wave.peaks,
+        duration: wave.duration,
         download_url,
         stems_url,
       });
-      if (coverPath) await supabase.from("covers").insert({ project_id: project.id, author_id: uid, image_url: coverPath, caption: "Cover originale" });
+      if (verErr) throw verErr;
+      if (coverPath) {
+        const { error: coverErr } = await supabase
+          .from("covers")
+          .insert({ project_id: project.id, author_id: uid, image_url: coverPath, caption: "Cover originale" });
+        if (coverErr) throw coverErr;
+      }
       qc.invalidateQueries();
       toast.success("Projet publié");
       navigate({ to: "/projects/$id", params: { id: project.id } });
     } catch (err) {
       toast.dismiss("compress");
+      if (projectId) await supabase.from("projects").delete().eq("id", projectId);
+      await removeFiles("audio", [audioPath]);
+      await removeFiles("covers", [coverPath]);
       toast.error((err as Error).message || "Publication impossible");
     } finally {
       setBusy(false);
@@ -185,7 +208,7 @@ function NewProject() {
         )}
       </div>
 
-      <Button type="submit" disabled={busy} className="h-12 w-full text-base">{busy ? "Publication…" : "Publier le projet"}</Button>
+      <Button type="submit" disabled={busy || !audio || !wave} className="h-12 w-full text-base">{busy ? "Publication…" : "Publier le projet"}</Button>
     </form>
   );
 }

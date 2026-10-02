@@ -76,7 +76,7 @@ export async function computePeaks(blob: Blob, buckets = 180): Promise<{ peaks: 
     const top = Math.max(...peaks, 0.0001);
     return { peaks: peaks.map((p) => Math.round((p / top) * 1000) / 1000), duration: audio.duration };
   } catch {
-    return { peaks: Array.from({ length: buckets }, () => 0.3 + Math.random() * 0.5), duration: 0 };
+    throw new Error("Impossible de lire ce fichier audio. Essaie un MP3, WAV ou M4A.");
   } finally {
     ctx.close();
   }

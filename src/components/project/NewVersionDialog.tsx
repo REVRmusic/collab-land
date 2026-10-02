@@ -26,12 +26,20 @@ export function NewVersionDialog({ projectId, uid, trigger }: { projectId: strin
 
   const pick = async (f?: File) => {
     if (!f) return;
-    setFile(f);
-    setWave(await computePeaks(f));
+    setFile(null);
+    setWave(null);
+    try {
+      const w = await computePeaks(f);
+      setFile(f);
+      setWave(w);
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
   };
 
   const submit = async () => {
     if (!file) { toast.error("Ajoute un fichier audio"); return; }
+    if (!wave) { toast.error("Attends la fin de l'analyse audio"); return; }
     let download_url: string | null;
     let stems_url: string | null;
     try {
@@ -40,15 +48,15 @@ export function NewVersionDialog({ projectId, uid, trigger }: { projectId: strin
     } catch (e) { toast.error((e as Error).message); return; }
     setBusy(true);
     try {
-      const w = wave ?? (await computePeaks(file));
       const path = await compressAudio(file, (p) => toast.loading(`Compression… ${p} %`, { id: "compress" })).then((c) => { toast.dismiss("compress"); return uploadFile("audio", c.blob, c.ext); });
       const { data: v, error } = await supabase
         .from("project_versions")
-        .insert({ project_id: projectId, author_id: uid, title: title || null, notes: notes || null, audio_url: path, peaks: w.peaks, duration: w.duration, download_url, stems_url })
+        .insert({ project_id: projectId, author_id: uid, title: title || null, notes: notes || null, audio_url: path, peaks: wave.peaks, duration: wave.duration, download_url, stems_url })
         .select("id")
         .single();
       if (error) throw error;
-      await supabase.from("messages").insert({ project_id: projectId, author_id: uid, kind: "version", version_id: v.id, body: notes || null });
+      const { error: msgErr } = await supabase.from("messages").insert({ project_id: projectId, author_id: uid, kind: "version", version_id: v.id, body: notes || null });
+      if (msgErr) throw msgErr;
       qc.invalidateQueries({ queryKey: ["project", projectId] });
       qc.invalidateQueries({ queryKey: ["versions", projectId] });
       qc.invalidateQueries({ queryKey: ["messages", projectId] });
@@ -88,7 +96,7 @@ export function NewVersionDialog({ projectId, uid, trigger }: { projectId: strin
         <div className="space-y-1.5"><Label>Notes</Label><Textarea rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Ce qui a changé…" /></div>
         <div className="space-y-1.5"><Label>Lien du projet complet (optionnel)</Label><Input type="url" value={link} onChange={(e) => setLink(e.target.value)} placeholder="Fichier FL Studio, Ableton, Logic…" maxLength={2000} /></div>
         <div className="space-y-1.5"><Label>Lien des STEMS (optionnel)</Label><Input type="url" value={stemsLink} onChange={(e) => setStemsLink(e.target.value)} placeholder="WeTransfer, SwissTransfer, Drive, Dropbox, iCloud…" maxLength={2000} /></div>
-        <Button onClick={submit} disabled={busy}>{busy ? "Envoi…" : "Publier"}</Button>
+        <Button onClick={submit} disabled={busy || !file || !wave}>{busy ? "Envoi…" : "Publier"}</Button>
       </DialogContent>
     </Dialog>
   );
