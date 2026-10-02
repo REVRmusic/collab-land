@@ -15,3 +15,4 @@
 - Project visibility is enforced by the can_view_project() SQL function used in every RLS policy on project-scoped tables.
 - Notifications are created only by DB triggers; the client never inserts them.
 - On mobile, project discussions use a full-screen overlay with a fixed composer so messaging remains reachable above the keyboard.
+- Project and STEMS download links belong to each project version; visible collaborators can access any link present on a version.

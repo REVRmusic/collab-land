@@ -94,13 +94,14 @@ export function EditProjectDialog({ project, uid, memberIds, onSaved }: { projec
   );
 }
 
-export function EditVersionDialog({ version, onSaved }: { version: { id: string; version_number: number; title: string | null; notes: string | null; download_url: string | null }; onSaved: () => void }) {
+export function EditVersionDialog({ version, onSaved }: { version: { id: string; version_number: number; title: string | null; notes: string | null; download_url: string | null; stems_url: string | null }; onSaved: () => void }) {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
   const [link, setLink] = useState("");
+  const [stemsLink, setStemsLink] = useState("");
   return (
-    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (o) { setTitle(version.title ?? ""); setNotes(version.notes ?? ""); setLink(version.download_url ?? ""); } }}>
+    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (o) { setTitle(version.title ?? ""); setNotes(version.notes ?? ""); setLink(version.download_url ?? ""); setStemsLink(version.stems_url ?? ""); } }}>
       <DialogTrigger asChild>
         <button className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground hover:bg-accent hover:text-foreground" aria-label={`Modifier la V${version.version_number}`}><Pencil className="h-4 w-4" /></button>
       </DialogTrigger>
@@ -108,11 +109,16 @@ export function EditVersionDialog({ version, onSaved }: { version: { id: string;
         <DialogHeader><DialogTitle>Modifier la V{version.version_number}</DialogTitle></DialogHeader>
         <div className="space-y-1.5"><Label>Titre</Label><Input value={title} onChange={(e) => setTitle(e.target.value)} /></div>
         <div className="space-y-1.5"><Label>Notes</Label><Textarea rows={4} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Ce qui a changé…" /></div>
-        <div className="space-y-1.5"><Label>Lien de téléchargement</Label><Input type="url" value={link} onChange={(e) => setLink(e.target.value)} placeholder="https://wetransfer.com/…" /></div>
+        <div className="space-y-1.5"><Label>Lien du projet complet</Label><Input type="url" value={link} onChange={(e) => setLink(e.target.value)} placeholder="Fichier FL Studio, Ableton, Logic…" maxLength={2000} /></div>
+        <div className="space-y-1.5"><Label>Lien des STEMS</Label><Input type="url" value={stemsLink} onChange={(e) => setStemsLink(e.target.value)} placeholder="https://wetransfer.com/…" maxLength={2000} /></div>
         <Button onClick={async () => {
           let download_url: string | null;
-          try { download_url = cleanLink(link); } catch (e) { toast.error((e as Error).message); return; }
-          const { error } = await supabase.from("project_versions").update({ title: title || null, notes: notes || null, download_url }).eq("id", version.id);
+          let stems_url: string | null;
+          try {
+            download_url = cleanLink(link);
+            stems_url = cleanLink(stemsLink);
+          } catch (e) { toast.error((e as Error).message); return; }
+          const { error } = await supabase.from("project_versions").update({ title: title || null, notes: notes || null, download_url, stems_url }).eq("id", version.id);
           if (error) { toast.error("Enregistrement impossible"); return; }
           toast.success("Version mise à jour");
           setOpen(false);

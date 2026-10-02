@@ -34,7 +34,7 @@ function NewProject() {
   const friends = useFriends(uid);
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const [f, setF] = useState({ title: "", genre: "", bpm: "", musical_key: "", description: "", help_needed: "", download_url: "" });
+  const [f, setF] = useState({ title: "", genre: "", bpm: "", musical_key: "", description: "", help_needed: "", download_url: "", stems_url: "" });
   const [audio, setAudio] = useState<File | null>(null);
   const [wave, setWave] = useState<{ peaks: number[]; duration: number } | null>(null);
   const [cover, setCover] = useState<File | null>(null);
@@ -55,7 +55,11 @@ function NewProject() {
     if (!audio || !uid) { toast.error("Ajoute un extrait audio"); return; }
     if (visibility === "selected" && selected.length === 0) { toast.error("Choisis au moins un ami"); return; }
     let download_url: string | null;
-    try { download_url = cleanLink(f.download_url); } catch (err) { toast.error((err as Error).message); return; }
+    let stems_url: string | null;
+    try {
+      download_url = cleanLink(f.download_url);
+      stems_url = cleanLink(f.stems_url);
+    } catch (err) { toast.error((err as Error).message); return; }
     setBusy(true);
     try {
       const w = wave ?? (await computePeaks(audio));
@@ -90,6 +94,7 @@ function NewProject() {
         peaks: w.peaks,
         duration: w.duration,
         download_url,
+        stems_url,
       });
       if (coverPath) await supabase.from("covers").insert({ project_id: project.id, author_id: uid, image_url: coverPath, caption: "Cover originale" });
       qc.invalidateQueries();
@@ -144,8 +149,12 @@ function NewProject() {
       <div className="space-y-1.5"><Label>Besoin d'aide sur… (optionnel)</Label><Input value={f.help_needed} onChange={(e) => setF({ ...f, help_needed: e.target.value })} placeholder="Besoin d'un drop plus impactant" /></div>
       <div className="space-y-1.5"><Label>Description</Label><Textarea rows={3} value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} /></div>
       <div className="space-y-1.5">
-        <Label>Lien de téléchargement de la V1 (optionnel)</Label>
-        <Input type="url" value={f.download_url} onChange={(e) => setF({ ...f, download_url: e.target.value })} placeholder="WeTransfer, SwissTransfer, Google Drive, Dropbox, iCloud…" />
+        <Label>Lien du projet complet de la V1 (optionnel)</Label>
+        <Input type="url" value={f.download_url} onChange={(e) => setF({ ...f, download_url: e.target.value })} placeholder="Fichier FL Studio, Ableton, Logic…" maxLength={2000} />
+      </div>
+      <div className="space-y-1.5">
+        <Label>Lien des STEMS de la V1 (optionnel)</Label>
+        <Input type="url" value={f.stems_url} onChange={(e) => setF({ ...f, stems_url: e.target.value })} placeholder="WeTransfer, SwissTransfer, Google Drive, Dropbox, iCloud…" maxLength={2000} />
       </div>
 
       <div className="space-y-3">

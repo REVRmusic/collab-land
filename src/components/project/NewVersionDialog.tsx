@@ -21,6 +21,7 @@ export function NewVersionDialog({ projectId, uid, trigger }: { projectId: strin
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
   const [link, setLink] = useState("");
+  const [stemsLink, setStemsLink] = useState("");
   const [busy, setBusy] = useState(false);
 
   const pick = async (f?: File) => {
@@ -32,14 +33,18 @@ export function NewVersionDialog({ projectId, uid, trigger }: { projectId: strin
   const submit = async () => {
     if (!file) { toast.error("Ajoute un fichier audio"); return; }
     let download_url: string | null;
-    try { download_url = cleanLink(link); } catch (e) { toast.error((e as Error).message); return; }
+    let stems_url: string | null;
+    try {
+      download_url = cleanLink(link);
+      stems_url = cleanLink(stemsLink);
+    } catch (e) { toast.error((e as Error).message); return; }
     setBusy(true);
     try {
       const w = wave ?? (await computePeaks(file));
       const path = await compressAudio(file, (p) => toast.loading(`Compression… ${p} %`, { id: "compress" })).then((c) => { toast.dismiss("compress"); return uploadFile("audio", c.blob, c.ext); });
       const { data: v, error } = await supabase
         .from("project_versions")
-        .insert({ project_id: projectId, author_id: uid, title: title || null, notes: notes || null, audio_url: path, peaks: w.peaks, duration: w.duration, download_url })
+        .insert({ project_id: projectId, author_id: uid, title: title || null, notes: notes || null, audio_url: path, peaks: w.peaks, duration: w.duration, download_url, stems_url })
         .select("id")
         .single();
       if (error) throw error;
@@ -54,6 +59,7 @@ export function NewVersionDialog({ projectId, uid, trigger }: { projectId: strin
       setTitle("");
       setNotes("");
       setLink("");
+      setStemsLink("");
     } catch (e) {
       toast.dismiss("compress");
       toast.error((e as Error).message);
@@ -80,7 +86,8 @@ export function NewVersionDialog({ projectId, uid, trigger }: { projectId: strin
         </label>
         <div className="space-y-1.5"><Label>Titre (optionnel)</Label><Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Nouveau drop, mix plus large…" /></div>
         <div className="space-y-1.5"><Label>Notes</Label><Textarea rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Ce qui a changé…" /></div>
-        <div className="space-y-1.5"><Label>Lien de téléchargement (optionnel)</Label><Input type="url" value={link} onChange={(e) => setLink(e.target.value)} placeholder="WeTransfer, SwissTransfer, Drive, Dropbox, iCloud…" /></div>
+        <div className="space-y-1.5"><Label>Lien du projet complet (optionnel)</Label><Input type="url" value={link} onChange={(e) => setLink(e.target.value)} placeholder="Fichier FL Studio, Ableton, Logic…" maxLength={2000} /></div>
+        <div className="space-y-1.5"><Label>Lien des STEMS (optionnel)</Label><Input type="url" value={stemsLink} onChange={(e) => setStemsLink(e.target.value)} placeholder="WeTransfer, SwissTransfer, Drive, Dropbox, iCloud…" maxLength={2000} /></div>
         <Button onClick={submit} disabled={busy}>{busy ? "Envoi…" : "Publier"}</Button>
       </DialogContent>
     </Dialog>

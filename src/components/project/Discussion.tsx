@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { linkHost } from "@/lib/links";
-import { ArrowLeft, CheckCheck, Download, CornerUpLeft, GitBranch, Mic, Plus, Send, Trash2, X } from "lucide-react";
+import { ArrowLeft, CheckCheck, Download, CornerUpLeft, GitBranch, Layers, Mic, Plus, Send, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { computePeaks, extOf, removeFiles, timeAgo, uploadFile } from "@/lib/media";
@@ -24,7 +24,7 @@ type Msg = {
   reply_to_id: string | null;
   created_at: string;
   author: Author;
-  version: { version_number: number; title: string | null; download_url: string | null; audio_url: string; peaks: number[] | null; duration: number | null } | null;
+  version: { version_number: number; title: string | null; download_url: string | null; stems_url: string | null; audio_url: string; peaks: number[] | null; duration: number | null } | null;
 };
 
 function preview(m?: Msg) {
@@ -54,7 +54,7 @@ export function Discussion({ projectId, uid, projectTitle, mobileOpen, onMobileC
     queryFn: async () => {
       const { data, error } = await supabase
         .from("messages")
-        .select("id,kind,body,audio_url,peaks,duration,reply_to_id,created_at,author:profiles!messages_author_id_fkey(id,username,display_name,avatar_url),version:project_versions(version_number,title,download_url,audio_url,peaks,duration)")
+        .select("id,kind,body,audio_url,peaks,duration,reply_to_id,created_at,author:profiles!messages_author_id_fkey(id,username,display_name,avatar_url),version:project_versions(version_number,title,download_url,stems_url,audio_url,peaks,duration)")
         .eq("project_id", projectId)
         .order("created_at", { ascending: true })
         .limit(300);
@@ -415,6 +415,11 @@ function Bubble({ m, mine }: { m: Msg; mine: boolean }) {
         {m.version.download_url && (
           <a href={m.version.download_url} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-secondary px-3 py-1.5 text-xs font-medium hover:bg-accent">
             <Download className="h-3.5 w-3.5" />Télécharger · {linkHost(m.version.download_url)}
+          </a>
+        )}
+        {m.version.stems_url && (
+          <a href={m.version.stems_url} target="_blank" rel="noreferrer" className="mt-2 ml-2 inline-flex items-center gap-1.5 rounded-lg bg-primary/15 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/20">
+            <Layers className="h-3.5 w-3.5" />STEMS · {linkHost(m.version.stems_url)}
           </a>
         )}
       </div>
