@@ -92,6 +92,7 @@ function NewProject() {
       toast.success("Projet publié");
       navigate({ to: "/projects/$id", params: { id: project.id } });
     } catch (err) {
+      toast.dismiss("compress");
       toast.error((err as Error).message || "Publication impossible");
     } finally {
       setBusy(false);
