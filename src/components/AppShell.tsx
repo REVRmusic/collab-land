@@ -8,7 +8,7 @@ import { UserAvatar } from "./UserAvatar";
 export function Logo() {
   return (
     <Link to="/feed" className="flex items-center gap-2">
-      <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-primary-foreground">
+      <span className="grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br from-[oklch(0.72_0.24_300)] to-[oklch(0.52_0.24_295)] text-white shadow-[0_4px_16px_-4px_oklch(0.6_0.24_297/60%)]">
         <AudioWaveform className="h-5 w-5" />
       </span>
       <span className="font-display text-lg font-bold tracking-tight">CollabLand</span>
