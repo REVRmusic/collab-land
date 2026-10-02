@@ -8,10 +8,10 @@ import { Waveform } from "@/components/Waveform";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "CollabLand — Le studio partagé des producteurs" },
-      { name: "description", content: "Vitrine de projets, historique des versions, stems, covers et vocaux : collabore avec tes amis producteurs." },
-      { property: "og:title", content: "CollabLand — Le studio partagé des producteurs" },
-      { property: "og:description", content: "Vitrine de projets, historique des versions, stems, covers et vocaux entre producteurs." },
+      { title: "CollabLand — Fais tes morceaux à plusieurs" },
+      { name: "description", content: "Partage tes projets en cours, échange des versions et des vocaux avec tes amis producteurs, et faites avancer le morceau ensemble." },
+      { property: "og:title", content: "CollabLand — Fais tes morceaux à plusieurs" },
+      { property: "og:description", content: "Partage tes projets en cours, échange des versions et des vocaux avec tes amis producteurs, et faites avancer le morceau ensemble." },
     ],
   }),
   component: Landing,
