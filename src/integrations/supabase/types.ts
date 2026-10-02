@@ -334,6 +334,7 @@ export type Database = {
           notes: string | null
           peaks: Json | null
           project_id: string
+          stems_url: string | null
           title: string | null
           version_number: number
         }
@@ -347,6 +348,7 @@ export type Database = {
           notes?: string | null
           peaks?: Json | null
           project_id: string
+          stems_url?: string | null
           title?: string | null
           version_number?: number
         }
@@ -360,6 +362,7 @@ export type Database = {
           notes?: string | null
           peaks?: Json | null
           project_id?: string
+          stems_url?: string | null
           title?: string | null
           version_number?: number
         }
@@ -444,6 +447,7 @@ export type Database = {
           project_id: string
           requester_id: string
           status: string
+          version_id: string | null
         }
         Insert: {
           created_at?: string
@@ -452,6 +456,7 @@ export type Database = {
           project_id: string
           requester_id: string
           status?: string
+          version_id?: string | null
         }
         Update: {
           created_at?: string
@@ -460,6 +465,7 @@ export type Database = {
           project_id?: string
           requester_id?: string
           status?: string
+          version_id?: string | null
         }
         Relationships: [
           {
@@ -474,6 +480,13 @@ export type Database = {
             columns: ["requester_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stem_requests_version_id_fkey"
+            columns: ["version_id"]
+            isOneToOne: false
+            referencedRelation: "project_versions"
             referencedColumns: ["id"]
           },
         ]
