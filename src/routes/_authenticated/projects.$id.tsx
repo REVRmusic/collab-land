@@ -80,7 +80,7 @@ function ProjectPage() {
     <div>
       <section className="relative overflow-hidden rounded-3xl border border-border bg-card p-4 sm:p-6" style={{ backgroundImage: "var(--gradient-glow)" }}>
         <div className="flex flex-col gap-5 md:flex-row">
-          <CoverImage path={p.cover_url} className="aspect-square w-full rounded-2xl md:w-56" />
+          <CoverImage path={p.cover_url} className="aspect-square w-full rounded-2xl md:w-56" seed={p.id} />
           <div className="flex min-w-0 flex-1 flex-col">
             <Link to="/u/$username" params={{ username: p.owner.username }} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
               <UserAvatar profile={p.owner} className="h-6 w-6" />{p.owner.display_name || p.owner.username}
@@ -410,7 +410,7 @@ function Covers({ projectId, uid, isOwner, currentCover }: { projectId: string; 
         {data?.map((c) => (
           <figure key={c.id} className="group overflow-hidden rounded-2xl border border-border bg-card">
             <div className="relative">
-              <CoverImage path={c.image_url} className="aspect-square w-full" />
+              <CoverImage path={c.image_url} className="aspect-square w-full" seed={c.id} />
               {currentCover === c.image_url && (
                 <span className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-primary px-2 py-0.5 text-[11px] font-semibold text-primary-foreground"><Star className="h-3 w-3 fill-current" />Principale</span>
               )}

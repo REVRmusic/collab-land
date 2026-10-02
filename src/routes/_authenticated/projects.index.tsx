@@ -67,7 +67,7 @@ function ProjectsPage() {
         {rows.map((p) => (
           <article key={p.id} className="group rounded-2xl border border-border bg-card p-3 transition hover:border-primary/30 sm:p-4">
             <div className="flex gap-4">
-              <Link to="/projects/$id" params={{ id: p.id }} className="shrink-0"><CoverImage path={p.cover_url} className="h-20 w-20 rounded-xl sm:h-24 sm:w-24" /></Link>
+              <Link to="/projects/$id" params={{ id: p.id }} className="shrink-0"><CoverImage path={p.cover_url} seed={p.id} className="h-20 w-20 rounded-xl sm:h-24 sm:w-24" /></Link>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <UserAvatar profile={p.owner} className="h-4 w-4" />
