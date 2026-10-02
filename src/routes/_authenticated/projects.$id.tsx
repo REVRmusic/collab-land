@@ -1,11 +1,12 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Download, GitBranch, ImagePlus, Layers, Lock, MessageCircle, Palette, Plus, Star, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useMe } from "@/hooks/use-me";
-import { compressImage, extOf, timeAgo, uploadFile } from "@/lib/media";
+import { compressImage, extOf, removeFiles, timeAgo, uploadFile } from "@/lib/media";
+import { ConfirmDelete } from "@/components/ConfirmDelete";
 import { CoverImage, UserAvatar } from "@/components/UserAvatar";
 import { TrackPlayer } from "@/components/TrackPlayer";
 import { Discussion } from "@/components/project/Discussion";
@@ -114,6 +115,19 @@ function ProjectPage() {
           )}
           {uid && !isOwner && <StemRequestButton projectId={id} uid={uid} />}
           {uid && <NewVersionDialog projectId={id} uid={uid} trigger={<Button variant="secondary"><Plus className="h-4 w-4" />Nouvelle version</Button>} />}
+          {isOwner && (
+            <ConfirmDelete title="Supprimer ce projet ?" description="Versions, covers, discussion et demandes de STEMS seront supprimés définitivement." onConfirm={async () => {
+              const audio = (versions.data ?? []).filter((v) => v.author.id === uid).map((v) => v.audio_url);
+              const { error } = await supabase.from("projects").delete().eq("id", id);
+              if (error) { toast.error("Suppression impossible"); return; }
+              await removeFiles("audio", audio);
+              toast.success("Projet supprimé");
+              qc.invalidateQueries();
+              navigate({ to: "/u/$username", params: { username: p.owner.username }, replace: true });
+            }}>
+              <Button variant="ghost" className="text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" />Supprimer</Button>
+            </ConfirmDelete>
+          )}
           {isOwner && <OwnerTools projectId={id} downloadUrl={p.download_url} onSaved={() => qc.invalidateQueries({ queryKey: ["project", id] })} />}
           {p.project_members.length > 0 && (
             <div className="ml-auto flex items-center -space-x-2">
@@ -143,6 +157,18 @@ function ProjectPage() {
                     {v.title && <span className="font-medium">{v.title}</span>}
                     <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><UserAvatar profile={v.author} className="h-4 w-4" />{v.author.display_name || v.author.username} · {timeAgo(v.created_at)}</span>
                     {i === 0 && <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-semibold text-primary">Dernière</span>}
+                    {(isOwner || v.author.id === uid) && (versions.data?.length ?? 0) > 1 && (
+                      <ConfirmDelete title={`Supprimer la V${v.version_number} ?`} description="La version et son message dans la discussion seront supprimés." onConfirm={async () => {
+                        const { error } = await supabase.from("project_versions").delete().eq("id", v.id);
+                        if (error) { toast.error(error.message.includes("seule version") ? "Impossible de supprimer la seule version" : "Suppression impossible"); return; }
+                        if (v.author.id === uid) await removeFiles("audio", [v.audio_url]);
+                        toast.success("Version supprimée");
+                        qc.invalidateQueries({ queryKey: ["versions", id] });
+                        qc.invalidateQueries({ queryKey: ["messages", id] });
+                      }}>
+                        <button className="ml-auto grid h-7 w-7 place-items-center rounded-full text-muted-foreground hover:bg-accent hover:text-destructive" aria-label={`Supprimer la V${v.version_number}`}><Trash2 className="h-4 w-4" /></button>
+                      </ConfirmDelete>
+                    )}
                   </div>
                   <TrackPlayer path={v.audio_url} peaks={v.peaks} duration={v.duration} size="sm" height={60} />
                   {v.notes && <p className="mt-3 text-sm text-foreground/80">{v.notes}</p>}
@@ -321,10 +347,16 @@ function Covers({ projectId, uid, isOwner, currentCover }: { projectId: string; 
                   }}>Définir principale</Button>
                 )}
                 {(isOwner || c.author_id === uid) && (
-                  <Button size="sm" variant="ghost" aria-label="Supprimer" onClick={async () => {
-                    await supabase.from("covers").delete().eq("id", c.id);
-                    qc.invalidateQueries({ queryKey: ["covers", projectId] });
-                  }}><Trash2 className="h-4 w-4" /></Button>
+                  <ConfirmDelete title="Supprimer cette cover ?" onConfirm={async () => {
+                    const { error } = await supabase.from("covers").delete().eq("id", c.id);
+                    if (error) { toast.error("Suppression impossible"); return; }
+                    if (currentCover === c.image_url) await supabase.from("projects").update({ cover_url: null }).eq("id", projectId);
+                    if (c.author_id === uid) await removeFiles("covers", [c.image_url]);
+                    toast.success("Cover supprimée");
+                    qc.invalidateQueries();
+                  }}>
+                    <Button size="sm" variant="ghost" aria-label="Supprimer la cover"><Trash2 className="h-4 w-4" /></Button>
+                  </ConfirmDelete>
                 )}
               </div>
             </figcaption>
