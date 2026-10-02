@@ -46,16 +46,16 @@ function Landing() {
         <Link to="/auth" className="rounded-full border border-border px-4 py-2 text-sm font-medium hover:bg-accent">Connexion</Link>
       </header>
       <section className="mx-auto max-w-6xl px-5 pb-16 pt-12 sm:pt-20">
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">Pour producteurs & DJs</p>
+        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">Faites de la musique ensemble</p>
         <h1 className="mt-4 max-w-3xl text-4xl font-bold leading-[1.05] sm:text-6xl">
-          Ton studio partagé.<br />Chaque idée, chaque version.
+          Un morceau ne se fait jamais seul.<br />Fais-le évoluer à plusieurs.
         </h1>
         <p className="mt-5 max-w-xl text-lg text-muted-foreground">
-          Montre tes démos dans ta vitrine, fais évoluer les projets à plusieurs, échange des vocaux et récupère les stems.
+          Dépose ton projet en cours, invite tes amis producteurs, et faites avancer le morceau ensemble — chaque version s'écoute, se commente et s'améliore, du premier brouillon au master.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
           <Link to="/auth" className="rounded-full bg-primary px-6 py-3 font-semibold text-primary-foreground shadow-[0_10px_40px_-10px_var(--primary)] hover:brightness-110">
-            Créer mon studio
+            Commencer à collaborer
           </Link>
         </div>
         <div className="mt-14 rounded-2xl border border-border bg-card/70 p-5 backdrop-blur">
