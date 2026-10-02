@@ -5,7 +5,7 @@ import { ImagePlus, Music, Users, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useMe } from "@/hooks/use-me";
-import { computePeaks, extOf, uploadFile } from "@/lib/media";
+import { compressImage, computePeaks, extOf, uploadFile } from "@/lib/media";
 import { compressAudio, AUDIO_ACCEPT } from "@/lib/audio-compress";
 import { useFriends } from "@/hooks/use-friends";
 import { UserAvatar } from "@/components/UserAvatar";
@@ -58,7 +58,7 @@ function NewProject() {
       const w = wave ?? (await computePeaks(audio));
       const [audioPath, coverPath] = await Promise.all([
         compressAudio(audio, (p) => toast.loading(`Compression… ${p} %`, { id: "compress" })).then((c) => { toast.dismiss("compress"); return uploadFile("audio", c.blob, c.ext); }),
-        cover ? uploadFile("covers", cover, extOf(cover, "jpg")) : Promise.resolve(null),
+        cover ? compressImage(cover).then((b) => uploadFile("covers", b, b.type === "image/jpeg" ? "jpg" : extOf(cover, "jpg"))) : Promise.resolve(null),
       ]);
       const { data: project, error } = await supabase
         .from("projects")

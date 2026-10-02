@@ -5,7 +5,7 @@ import { Download, GitBranch, ImagePlus, Layers, Lock, MessageCircle, Palette, P
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useMe } from "@/hooks/use-me";
-import { extOf, timeAgo, uploadFile } from "@/lib/media";
+import { compressImage, extOf, timeAgo, uploadFile } from "@/lib/media";
 import { CoverImage, UserAvatar } from "@/components/UserAvatar";
 import { TrackPlayer } from "@/components/TrackPlayer";
 import { Discussion } from "@/components/project/Discussion";
@@ -279,7 +279,8 @@ function Covers({ projectId, uid, isOwner, currentCover }: { projectId: string; 
     if (!f) return;
     setBusy(true);
     try {
-      const path = await uploadFile("covers", f, extOf(f, "jpg"));
+      const img = await compressImage(f);
+      const path = await uploadFile("covers", img, img.type === "image/jpeg" ? "jpg" : extOf(f, "jpg"));
       const { error } = await supabase.from("covers").insert({ project_id: projectId, author_id: uid, image_url: path, caption: caption || null });
       if (error) throw error;
       setCaption("");
