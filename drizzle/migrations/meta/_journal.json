@@ -92,6 +92,13 @@
       "when": 1790981000000,
       "tag": "0012_invites_and_showcase",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1790981694743,
+      "tag": "0013_fix_project_invite_token",
+      "breakpoints": true
     }
   ]
 }
