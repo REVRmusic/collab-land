@@ -19,10 +19,12 @@ import { Route as AuthenticatedFriendsRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
+import { Route as OgDefaultRouteImport } from './routes/og/default'
 import { Route as UUsernameRouteImport } from './routes/u.$username'
 import { Route as AuthenticatedProjectsIndexRouteImport } from './routes/_authenticated/projects.index'
 import { Route as AuthenticatedProjectsIdRouteImport } from './routes/_authenticated/projects.$id'
 import { Route as AuthenticatedProjectsNewRouteImport } from './routes/_authenticated/projects.new'
+import { Route as OgUUsernameRouteImport } from './routes/og/u.$username'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 
@@ -76,6 +78,11 @@ const InviteTokenRoute = InviteTokenRouteImport.update({
   path: '/invite/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OgDefaultRoute = OgDefaultRouteImport.update({
+  id: '/og/default',
+  path: '/og/default',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const UUsernameRoute = UUsernameRouteImport.update({
   id: '/u/$username',
   path: '/u/$username',
@@ -98,6 +105,11 @@ const AuthenticatedProjectsNewRoute =
     path: '/projects/new',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const OgUUsernameRoute = OgUUsernameRouteImport.update({
+  id: '/og/u/$username',
+  path: '/og/u/$username',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
   id: '/lovable/email/auth/preview',
   path: '/lovable/email/auth/preview',
@@ -119,9 +131,11 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/og/default': typeof OgDefaultRoute
   '/u/$username': typeof UUsernameRoute
   '/projects/$id': typeof AuthenticatedProjectsIdRoute
   '/projects/new': typeof AuthenticatedProjectsNewRoute
+  '/og/u/$username': typeof OgUUsernameRoute
   '/projects/': typeof AuthenticatedProjectsIndexRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -136,9 +150,11 @@ export interface FileRoutesByTo {
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/og/default': typeof OgDefaultRoute
   '/u/$username': typeof UUsernameRoute
   '/projects/$id': typeof AuthenticatedProjectsIdRoute
   '/projects/new': typeof AuthenticatedProjectsNewRoute
+  '/og/u/$username': typeof OgUUsernameRoute
   '/projects': typeof AuthenticatedProjectsIndexRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -155,9 +171,11 @@ export interface FileRoutesById {
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/og/default': typeof OgDefaultRoute
   '/u/$username': typeof UUsernameRoute
   '/_authenticated/projects/$id': typeof AuthenticatedProjectsIdRoute
   '/_authenticated/projects/new': typeof AuthenticatedProjectsNewRoute
+  '/og/u/$username': typeof OgUUsernameRoute
   '/_authenticated/projects/': typeof AuthenticatedProjectsIndexRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -174,9 +192,11 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/settings'
     | '/invite/$token'
+    | '/og/default'
     | '/u/$username'
     | '/projects/$id'
     | '/projects/new'
+    | '/og/u/$username'
     | '/projects/'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -191,9 +211,11 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/settings'
     | '/invite/$token'
+    | '/og/default'
     | '/u/$username'
     | '/projects/$id'
     | '/projects/new'
+    | '/og/u/$username'
     | '/projects'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -209,9 +231,11 @@ export interface FileRouteTypes {
     | '/_authenticated/notifications'
     | '/_authenticated/settings'
     | '/invite/$token'
+    | '/og/default'
     | '/u/$username'
     | '/_authenticated/projects/$id'
     | '/_authenticated/projects/new'
+    | '/og/u/$username'
     | '/_authenticated/projects/'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -224,7 +248,9 @@ export interface RootRouteChildren {
   LegalRoute: typeof LegalRoute
   TermsRoute: typeof TermsRoute
   InviteTokenRoute: typeof InviteTokenRoute
+  OgDefaultRoute: typeof OgDefaultRoute
   UUsernameRoute: typeof UUsernameRoute
+  OgUUsernameRoute: typeof OgUUsernameRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
 }
@@ -301,6 +327,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InviteTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/og/default': {
+      id: '/og/default'
+      path: '/og/default'
+      fullPath: '/og/default'
+      preLoaderRoute: typeof OgDefaultRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/u/$username': {
       id: '/u/$username'
       path: '/u/$username'
@@ -328,6 +361,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/projects/new'
       preLoaderRoute: typeof AuthenticatedProjectsNewRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/og/u/$username': {
+      id: '/og/u/$username'
+      path: '/og/u/$username'
+      fullPath: '/og/u/$username'
+      preLoaderRoute: typeof OgUUsernameRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/lovable/email/auth/preview': {
       id: '/lovable/email/auth/preview'
@@ -376,7 +416,9 @@ const rootRouteChildren: RootRouteChildren = {
   LegalRoute: LegalRoute,
   TermsRoute: TermsRoute,
   InviteTokenRoute: InviteTokenRoute,
+  OgDefaultRoute: OgDefaultRoute,
   UUsernameRoute: UUsernameRoute,
+  OgUUsernameRoute: OgUUsernameRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
 }

@@ -11,16 +11,33 @@ import { PROJECT_SELECT, ProjectCard, type ProjectRow } from "@/components/Proje
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { LegalFooter } from "@/components/LegalPage";
+import { getProfileShareMeta } from "@/lib/profile-share.functions";
+import { buildProfileShareMeta } from "@/lib/share-meta";
 
 export const Route = createFileRoute("/u/$username")({
-  head: ({ params }) => ({
-    meta: [
-      { title: `@${params.username} — CollabLand` },
-      { name: "description", content: `La vitrine de projets de @${params.username} sur CollabLand.` },
-      { property: "og:title", content: `@${params.username} — CollabLand` },
-      { property: "og:description", content: `La vitrine de projets de @${params.username}.` },
-    ],
-  }),
+  loader: ({ params }) => getProfileShareMeta({ data: { username: params.username } }),
+  head: ({ loaderData, params }) => {
+    const share = loaderData ?? buildProfileShareMeta(null, params.username, "https://collab-land.lovable.app");
+    return {
+      meta: [
+        { title: share.title },
+        { name: "description", content: share.description },
+        { property: "og:type", content: "profile" },
+        { property: "og:title", content: share.title },
+        { property: "og:description", content: share.description },
+        { property: "og:url", content: share.pageUrl },
+        { property: "og:image", content: share.imageUrl },
+        { property: "og:image:alt", content: `Photo de profil de ${share.name}` },
+        { property: "og:site_name", content: "CollabLand" },
+        { name: "twitter:card", content: "summary_large_image" },
+        { name: "twitter:title", content: share.title },
+        { name: "twitter:description", content: share.description },
+        { name: "twitter:image", content: share.imageUrl },
+        { name: "twitter:image:alt", content: `Photo de profil de ${share.name}` },
+      ],
+      links: [{ rel: "canonical", href: share.pageUrl }],
+    };
+  },
   component: ProfileRoute,
 });
 
@@ -46,13 +63,15 @@ function ProfileRoute() {
 
 function ProfilePage() {
   const { username } = Route.useParams();
+  const share = Route.useLoaderData();
   const { uid } = useMe();
   const prof = useQuery({
     queryKey: ["profile", username],
+    initialData: share.profile ?? undefined,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id,username,display_name,avatar_url,bio,created_at")
+        .select("id,username,display_name,avatar_url,bio")
         .eq("username", username)
         .maybeSingle();
       if (error) throw error;
@@ -76,13 +95,23 @@ function ProfilePage() {
   if (prof.isLoading) return <Skeleton className="h-40 rounded-2xl" />;
   if (!p) return <p className="text-muted-foreground">Producteur introuvable.</p>;
 
-  const share = async () => {
-    const url = `${window.location.origin}/u/${p.username}`;
+  const shareLink = async () => {
+    const url = share.pageUrl || `${window.location.origin}/u/${p.username}`;
     try {
+      if (navigator.share) {
+        await navigator.share({ title: share.title, text: share.description, url });
+        return;
+      }
       await navigator.clipboard.writeText(url);
       toast.success("Lien de la vitrine copié");
-    } catch {
-      toast.error("Impossible de copier le lien");
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
+      try {
+        await navigator.clipboard.writeText(url);
+        toast.success("Lien de la vitrine copié");
+      } catch {
+        toast.error("Impossible de copier le lien");
+      }
     }
   };
 
@@ -100,7 +129,7 @@ function ProfilePage() {
             {p.bio && <p className="mt-2 max-w-xl text-sm text-foreground/80">{p.bio}</p>}
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button type="button" variant="secondary" size="sm" onClick={share}>
+            <Button type="button" variant="secondary" size="sm" onClick={shareLink}>
               <Share2 className="h-4 w-4" />Partager
             </Button>
             {isMe ? (
@@ -129,7 +158,7 @@ function ProfilePage() {
           </p>
         </div>
         {isMe && (
-          <button type="button" onClick={share} className="hidden items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground sm:inline-flex">
+          <button type="button" onClick={shareLink} className="hidden items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground sm:inline-flex">
             <Copy className="h-3.5 w-3.5" />/u/{p.username}
           </button>
         )}

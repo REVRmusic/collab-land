@@ -9,8 +9,16 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/invite/$token")({
   head: () => ({
     meta: [
-      { title: "Invitation — CollabLand" },
-      { name: "description", content: "Rejoins un projet CollabLand via un lien d'invitation." },
+      { title: "Invitation à un projet — CollabLand" },
+      { name: "description", content: "Tu as été invité à rejoindre un projet CollabLand. Ouvre le lien pour collaborer." },
+      { property: "og:type", content: "website" },
+      { property: "og:title", content: "Invitation à un projet — CollabLand" },
+      { property: "og:description", content: "Tu as été invité à rejoindre un projet CollabLand. Ouvre le lien pour collaborer." },
+      { property: "og:image", content: "https://collab-land.lovable.app/og/default" },
+      { name: "twitter:card", content: "summary" },
+      { name: "twitter:title", content: "Invitation à un projet — CollabLand" },
+      { name: "twitter:description", content: "Tu as été invité à rejoindre un projet CollabLand. Ouvre le lien pour collaborer." },
+      { name: "twitter:image", content: "https://collab-land.lovable.app/og/default" },
     ],
   }),
   component: InvitePage,
