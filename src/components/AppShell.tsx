@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
-import { AudioWaveform, Bell, Home, Plus, Settings, User, Users } from "lucide-react";
+import { Bell, Home, Plus, Settings, User, Users } from "lucide-react";
+import logoAsset from "@/assets/collabland-logo.png.asset.json";
 import type { ReactNode } from "react";
 import { useMe } from "@/hooks/use-me";
 import { NotificationBell, useNotifications } from "./NotificationBell";
@@ -8,9 +9,7 @@ import { UserAvatar } from "./UserAvatar";
 export function Logo() {
   return (
     <Link to="/feed" className="flex items-center gap-2">
-      <span className="grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br from-[oklch(0.72_0.24_300)] to-[oklch(0.52_0.24_295)] text-white shadow-[0_4px_16px_-4px_oklch(0.6_0.24_297/60%)]">
-        <AudioWaveform className="h-5 w-5" />
-      </span>
+      <img src={logoAsset.url} alt="CollabLand" className="h-8 w-8 rounded-xl" width={32} height={32} />
       <span className="font-display text-lg font-bold tracking-tight">CollabLand</span>
     </Link>
   );
