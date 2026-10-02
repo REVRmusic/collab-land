@@ -52,7 +52,7 @@ export function useNotifications(uid?: string) {
   useEffect(() => {
     if (!uid) return;
     const ch = supabase
-      .channel(`notif-${uid}`)
+      .channel(`notif-${uid}-${Math.random().toString(36).slice(2)}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${uid}` }, () =>
         qc.invalidateQueries({ queryKey: ["notifications", uid] }),
       )

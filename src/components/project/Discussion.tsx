@@ -56,7 +56,7 @@ export function Discussion({ projectId, uid }: { projectId: string; uid: string 
 
   useEffect(() => {
     const ch = supabase
-      .channel(`msgs-${projectId}`)
+      .channel(`msgs-${projectId}-${Math.random().toString(36).slice(2)}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "messages", filter: `project_id=eq.${projectId}` }, () => {
         qc.invalidateQueries({ queryKey: ["messages", projectId] });
         qc.invalidateQueries({ queryKey: ["versions", projectId] });
