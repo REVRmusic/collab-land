@@ -290,39 +290,6 @@ export type Database = {
         }
         Relationships: []
       }
-      project_members: {
-        Row: {
-          created_at: string
-          project_id: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          project_id: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          project_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "project_members_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "project_members_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       project_invites: {
         Row: {
           created_at: string
@@ -356,8 +323,41 @@ export type Database = {
           {
             foreignKeyName: "project_invites_project_id_fkey"
             columns: ["project_id"]
+            isOneToOne: true
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_members: {
+        Row: {
+          created_at: string
+          project_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          project_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          project_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_members_project_id_fkey"
+            columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -533,63 +533,12 @@ export type Database = {
           },
         ]
       }
-      version_markers: {
-        Row: {
-          author_id: string
-          body: string
-          created_at: string
-          id: string
-          project_id: string
-          time_sec: number
-          version_id: string
-        }
-        Insert: {
-          author_id: string
-          body: string
-          created_at?: string
-          id?: string
-          project_id: string
-          time_sec: number
-          version_id: string
-        }
-        Update: {
-          author_id?: string
-          body?: string
-          created_at?: string
-          id?: string
-          project_id?: string
-          time_sec?: number
-          version_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "version_markers_author_id_fkey"
-            columns: ["author_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "version_markers_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "version_markers_version_id_fkey"
-            columns: ["version_id"]
-            isOneToOne: false
-            referencedRelation: "project_versions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      accept_project_invite: { Args: { _token: string }; Returns: string }
       are_friends: { Args: { a: string; b: string }; Returns: boolean }
       can_read_media: {
         Args: { _bucket: string; _name: string; _uid: string }
@@ -599,17 +548,25 @@ export type Database = {
         Args: { _pid: string; _uid: string }
         Returns: boolean
       }
+      get_or_create_project_invite: {
+        Args: { _project_id: string }
+        Returns: string
+      }
       is_project_owner: {
         Args: { _pid: string; _uid: string }
+        Returns: boolean
+      }
+      is_showcase_media: {
+        Args: { _bucket: string; _name: string }
         Returns: boolean
       }
       message_author: { Args: { _mid: string }; Returns: string }
       message_project: { Args: { _mid: string }; Returns: string }
       project_participants: { Args: { _pid: string }; Returns: string[] }
-      get_or_create_project_invite: { Args: { _project_id: string }; Returns: string }
-      revoke_project_invite: { Args: { _project_id: string }; Returns: undefined }
-      accept_project_invite: { Args: { _token: string }; Returns: string }
-      is_showcase_media: { Args: { _bucket: string; _name: string }; Returns: boolean }
+      revoke_project_invite: {
+        Args: { _project_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
