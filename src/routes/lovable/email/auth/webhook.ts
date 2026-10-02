@@ -13,7 +13,7 @@ const SITE_NAME = "CollabLand"
 const SENDER_DOMAIN = "collabland-notify.lm-music.com"
 const ROOT_DOMAIN = "lm-music.com"
 const FROM_DOMAIN = "collabland-notify.lm-music.com"
-const SITE_URL = `https://${ROOT_DOMAIN}`
+const SITE_URL = "https://collab-land.lovable.app"
 
 // The SDK handler owns verification, dispatch, and retry semantics; this file
 // owns only the email decisions: subjects, templates, and per-type props.
@@ -28,7 +28,7 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
           sendUrl: process.env['LOVABLE_SEND_URL'],
           emails: {
             signup: {
-              subject: 'Confirm your email',
+              subject: 'Bienvenue sur CollabLand — confirme ton email',
               render: (data) =>
                 React.createElement(SignupEmail, {
                   siteName: SITE_NAME,
@@ -38,7 +38,7 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
                 }),
             },
             invite: {
-              subject: "You've been invited",
+              subject: 'Tu es invité sur CollabLand',
               render: (data) =>
                 React.createElement(InviteEmail, {
                   siteName: SITE_NAME,
@@ -47,7 +47,7 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
                 }),
             },
             magiclink: {
-              subject: 'Your login link',
+              subject: 'Ton lien de connexion CollabLand',
               render: (data) =>
                 React.createElement(MagicLinkEmail, {
                   siteName: SITE_NAME,
@@ -55,7 +55,7 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
                 }),
             },
             recovery: {
-              subject: 'Reset your password',
+              subject: 'Réinitialise ton mot de passe CollabLand',
               render: (data) =>
                 React.createElement(RecoveryEmail, {
                   siteName: SITE_NAME,
@@ -63,7 +63,7 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
                 }),
             },
             email_change: {
-              subject: 'Confirm your new email',
+              subject: 'Confirme ta nouvelle adresse email',
               render: (data) =>
                 React.createElement(EmailChangeEmail, {
                   siteName: SITE_NAME,
@@ -74,7 +74,7 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
                 }),
             },
             reauthentication: {
-              subject: 'Your verification code',
+              subject: 'Ton code de vérification CollabLand',
               render: (data) =>
                 React.createElement(ReauthenticationEmail, { token: data.token ?? '' }),
             },
