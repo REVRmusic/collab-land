@@ -1,7 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Download, GitBranch, ImagePlus, Layers, Lock, MessageCircle, Palette, Plus, Star, Trash2, Users } from "lucide-react";
+import { Download, GitBranch, ImagePlus, Layers, LifeBuoy, Lock, MessageCircle, Palette, Plus, Star, Trash2, Users } from "lucide-react";
+import { EditProjectDialog, EditVersionDialog } from "@/components/project/EditProjectDialog";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useMe } from "@/hooks/use-me";
@@ -102,6 +103,12 @@ function ProjectPage() {
                 {p.visibility === "selected" ? <><Lock className="h-3 w-3" />Collaborateurs choisis</> : <><Users className="h-3 w-3" />Tous les amis</>}
               </span>
             </div>
+            {p.help_needed && (
+              <div className="mt-3 flex max-w-2xl items-start gap-2 rounded-xl border border-primary/40 bg-primary/10 px-3 py-2 text-sm">
+                <LifeBuoy className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                <span><span className="font-semibold text-primary">Besoin d'aide : </span>{p.help_needed}</span>
+              </div>
+            )}
             {p.description && <p className="mt-3 max-w-2xl text-sm text-foreground/80">{p.description}</p>}
             <div className="mt-auto pt-5">
               {latest && <TrackPlayer path={latest.audio_url} peaks={latest.peaks} duration={latest.duration} height={84} />}
@@ -129,7 +136,7 @@ function ProjectPage() {
               <Button variant="ghost" className="text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" />Supprimer</Button>
             </ConfirmDelete>
           )}
-          {isOwner && <OwnerTools projectId={id} downloadUrl={p.download_url} onSaved={() => qc.invalidateQueries({ queryKey: ["project", id] })} />}
+          {isOwner && uid && <EditProjectDialog project={p} uid={uid} memberIds={p.project_members.map((m) => m.user.id)} onSaved={() => qc.invalidateQueries()} />}
           {p.project_members.length > 0 && (
             <div className="ml-auto flex items-center -space-x-2">
               {p.project_members.map((m) => <UserAvatar key={m.user.id} profile={m.user} className="h-8 w-8 ring-2 ring-card" />)}
@@ -158,6 +165,9 @@ function ProjectPage() {
                     {v.title && <span className="font-medium">{v.title}</span>}
                     <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><UserAvatar profile={v.author} className="h-4 w-4" />{v.author.display_name || v.author.username} · {timeAgo(v.created_at)}</span>
                     {i === 0 && <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-semibold text-primary">Dernière</span>}
+                    {(isOwner || v.author.id === uid) && (
+                      <span className="ml-auto"><EditVersionDialog version={v} onSaved={() => { qc.invalidateQueries({ queryKey: ["versions", id] }); }} /></span>
+                    )}
                     {(isOwner || v.author.id === uid) && (versions.data?.length ?? 0) > 1 && (
                       <ConfirmDelete title={`Supprimer la V${v.version_number} ?`} description="La version et son message dans la discussion seront supprimés." onConfirm={async () => {
                         const { error } = await supabase.from("project_versions").delete().eq("id", v.id);
@@ -263,29 +273,6 @@ function StemRequests({ projectId }: { projectId: string }) {
   );
 }
 
-function OwnerTools({ projectId, downloadUrl, onSaved }: { projectId: string; downloadUrl: string | null; onSaved: () => void }) {
-  const [open, setOpen] = useState(false);
-  const [url, setUrl] = useState(downloadUrl ?? "");
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild><Button variant="ghost"><Download className="h-4 w-4" />Lien du projet</Button></DialogTrigger>
-      <DialogContent>
-        <DialogHeader><DialogTitle>Lien de téléchargement</DialogTitle></DialogHeader>
-        <Input type="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://wetransfer.com/…" />
-        <Button
-          onClick={async () => {
-            await supabase.from("projects").update({ download_url: url || null }).eq("id", projectId);
-            onSaved();
-            setOpen(false);
-            toast.success("Lien enregistré");
-          }}
-        >
-          Enregistrer
-        </Button>
-      </DialogContent>
-    </Dialog>
-  );
-}
 
 function Covers({ projectId, uid, isOwner, currentCover }: { projectId: string; uid: string; isOwner: boolean; currentCover: string | null }) {
   const qc = useQueryClient();
