@@ -1,4 +1,5 @@
-import { useMemo, type CSSProperties } from "react";
+import { useMemo, useRef, type CSSProperties } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useMediaUrl } from "@/lib/media";
 
 type P = { avatar_url?: string | null; username?: string | null; display_name?: string | null } | null | undefined;
@@ -80,6 +81,8 @@ export function CoverImage({
   seed?: string | null;
 }) {
   const url = useMediaUrl("covers", path);
+  const qc = useQueryClient();
+  const retried = useRef(false);
   const placeholder = useMemo(
     () => coverPlaceholderStyle(seed || path || "cover"),
     [seed, path],
@@ -87,7 +90,7 @@ export function CoverImage({
   return (
     <div className={`relative aspect-square shrink-0 self-start overflow-hidden bg-surface-2 ${className}`}>
       {url ? (
-        <img src={url} alt="" className="absolute inset-0 h-full w-full object-cover" />
+        <img src={url} alt="" className="absolute inset-0 h-full w-full object-cover" onError={() => { if (retried.current) return; retried.current = true; qc.invalidateQueries({ queryKey: ["media", "covers", path] }); }} />
       ) : (
         <div className="absolute inset-0" style={placeholder} />
       )}
