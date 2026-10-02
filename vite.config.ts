@@ -19,6 +19,10 @@ export default defineConfig({
       include: [
         "@lovable.dev/cloud-auth-js",
         "@radix-ui/react-dialog",
+        "@radix-ui/react-alert-dialog",
+        "@radix-ui/react-dropdown-menu",
+        "@radix-ui/react-hover-card",
+        "@radix-ui/react-toggle",
         "@radix-ui/react-dropdown-menu",
         "@radix-ui/react-label",
         "@radix-ui/react-popover",
