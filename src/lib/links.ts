@@ -12,13 +12,13 @@ export function linkHost(url: string) {
   }
 }
 
-/** Returns a normalized http(s) URL, null for empty input, or throws on invalid input. */
+/** Returns a normalized HTTPS URL, null for empty input, or throws on invalid input. */
 export function cleanLink(raw: string): string | null {
   const v = raw.trim();
   if (!v) return null;
   try {
     const u = new URL(v);
-    if (u.protocol !== "http:" && u.protocol !== "https:") throw new Error();
+    if (u.protocol !== "https:") throw new Error();
     if (v.length > 2000) throw new Error();
     return u.toString();
   } catch {
