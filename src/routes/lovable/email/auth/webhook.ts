@@ -9,7 +9,7 @@ import { EmailChangeEmail } from '@/lib/email-templates/email-change'
 import { ReauthenticationEmail } from '@/lib/email-templates/reauthentication'
 
 // Configuration
-const SITE_NAME = "Collab Land"
+const SITE_NAME = "CollabLand"
 const SENDER_DOMAIN = "collabland-notify.lm-music.com"
 const ROOT_DOMAIN = "lm-music.com"
 const FROM_DOMAIN = "collabland-notify.lm-music.com"
