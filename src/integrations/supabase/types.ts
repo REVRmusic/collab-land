@@ -95,6 +95,39 @@ export type Database = {
           },
         ]
       }
+      message_reads: {
+        Row: {
+          message_id: string
+          read_at: string
+          user_id: string
+        }
+        Insert: {
+          message_id: string
+          read_at?: string
+          user_id: string
+        }
+        Update: {
+          message_id?: string
+          read_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_reads_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_reads_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           audio_url: string | null
@@ -453,6 +486,8 @@ export type Database = {
         Args: { _pid: string; _uid: string }
         Returns: boolean
       }
+      message_author: { Args: { _mid: string }; Returns: string }
+      message_project: { Args: { _mid: string }; Returns: string }
       project_participants: { Args: { _pid: string }; Returns: string[] }
     }
     Enums: {
