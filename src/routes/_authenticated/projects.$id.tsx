@@ -80,7 +80,7 @@ function ProjectPage() {
     <div>
       <section className="relative overflow-hidden rounded-3xl border border-border bg-card p-4 sm:p-6" style={{ backgroundImage: "var(--gradient-glow)" }}>
         <div className="flex flex-col gap-5 md:flex-row">
-          <CoverImage path={p.cover_url} className="aspect-square w-full rounded-2xl md:w-56" seed={p.id} />
+          <CoverImage path={p.cover_url} className="aspect-square w-full rounded-2xl md:w-56" seed={`${p.id}:${p.title}`} />
           <div className="flex min-w-0 flex-1 flex-col">
             <Link to="/u/$username" params={{ username: p.owner.username }} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
               <UserAvatar profile={p.owner} className="h-6 w-6" />{p.owner.display_name || p.owner.username}

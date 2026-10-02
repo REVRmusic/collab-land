@@ -1,4 +1,4 @@
-import { useMemo, useRef, type CSSProperties } from "react";
+import { useMemo, useRef, useState, type CSSProperties } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMediaUrl } from "@/lib/media";
 
@@ -40,34 +40,32 @@ function mulberry32(seed: number) {
   };
 }
 
-/** Soft blue/violet glows — stable for a given seed, varied across projects. */
+/** Blue→violet washes; vivid enough to read on tiny thumbs, stable per seed. */
 function coverPlaceholderStyle(seed: string): CSSProperties {
-  const rand = mulberry32(hashSeed(seed || "collabland"));
-  const count = 2 + Math.floor(rand() * 3); // 2–4 glows
-  const layers: string[] = [];
+  const h = hashSeed(seed || "collabland");
+  const rand = mulberry32(h);
+  const bands = [200, 230, 255, 275, 295, 320];
+  const baseHue = bands[h % bands.length]!;
+  const accentHue = bands[(h + 2) % bands.length]!;
+  const base = `hsl(${baseHue} 55% ${10 + rand() * 8}%)`;
 
-  // Deep charcoal base with a faint wash
-  const baseHue = 270 + rand() * 30;
-  layers.push(`radial-gradient(120% 120% at 50% 50%, oklch(0.22 0.03 ${baseHue}), oklch(0.14 0.015 ${baseHue - 10}))`);
+  const corners = [
+    [8, 10], [92, 12], [10, 90], [90, 88],
+    [50, 6], [50, 94], [4, 50], [96, 50],
+  ] as const;
+  const a = corners[h % corners.length]!;
+  const b = corners[(h + 3) % corners.length]!;
+  const c = corners[(h + 5) % corners.length]!;
 
-  for (let i = 0; i < count; i++) {
-    const x = 5 + rand() * 90;
-    const y = 5 + rand() * 90;
-    const stop = 40 + rand() * 40;
-    // Blues (~250) through violets (~300)
-    const hue = 248 + rand() * 58;
-    const chroma = 0.14 + rand() * 0.14;
-    const light = 0.42 + rand() * 0.28;
-    const alpha = 0.35 + rand() * 0.45;
-    layers.push(
-      `radial-gradient(circle at ${x.toFixed(1)}% ${y.toFixed(1)}%, oklch(${light.toFixed(3)} ${chroma.toFixed(3)} ${hue.toFixed(1)} / ${alpha.toFixed(3)}), transparent ${stop.toFixed(0)}%)`,
-    );
-  }
+  // `at X% Y%` form is widely supported; avoid `circle N%` which some engines drop
+  const layers = [
+    `radial-gradient(at ${a[0]}% ${a[1]}%, hsl(${baseHue} 90% 62% / 0.95) 0%, transparent 55%)`,
+    `radial-gradient(at ${b[0]}% ${b[1]}%, hsl(${accentHue} 85% 55% / 0.75) 0%, transparent 50%)`,
+    `radial-gradient(at ${c[0]}% ${c[1]}%, hsl(${(baseHue + accentHue) / 2} 70% 45% / 0.45) 0%, transparent 45%)`,
+    `linear-gradient(${Math.floor(rand() * 360)}deg, hsl(${baseHue} 40% 8% / 0.9), hsl(${accentHue} 35% 6% / 0.85))`,
+  ];
 
-  // Soft vignette
-  layers.push("radial-gradient(circle at 50% 50%, transparent 35%, oklch(0.1 0.02 280 / 0.55) 100%)");
-
-  return { backgroundImage: layers.join(",") };
+  return { backgroundColor: base, backgroundImage: layers.join(", ") };
 }
 
 export function CoverImage({
@@ -83,16 +81,29 @@ export function CoverImage({
   const url = useMediaUrl("covers", path);
   const qc = useQueryClient();
   const retried = useRef(false);
+  const [broken, setBroken] = useState(false);
   const placeholder = useMemo(
     () => coverPlaceholderStyle(seed || path || "cover"),
     [seed, path],
   );
+  const showImage = !!url && !broken;
   return (
     <div className={`relative aspect-square shrink-0 self-start overflow-hidden bg-surface-2 ${className}`}>
-      {url ? (
-        <img src={url} alt="" className="absolute inset-0 h-full w-full object-cover" onError={() => { if (retried.current) return; retried.current = true; qc.invalidateQueries({ queryKey: ["media", "covers", path] }); }} />
-      ) : (
-        <div className="absolute inset-0" style={placeholder} />
+      <div className="absolute inset-0" style={placeholder} aria-hidden />
+      {showImage && (
+        <img
+          src={url}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover"
+          onError={() => {
+            if (!retried.current) {
+              retried.current = true;
+              qc.invalidateQueries({ queryKey: ["media", "covers", path] });
+              return;
+            }
+            setBroken(true);
+          }}
+        />
       )}
     </div>
   );

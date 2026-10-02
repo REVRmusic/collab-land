@@ -174,7 +174,7 @@ function ActivityCard({ item }: { item: Activity }) {
           {item.kind === "version" && (
             <div className="mt-3 flex gap-3">
               <Link to="/projects/$id" params={{ id: item.project.id }} className="shrink-0">
-                <CoverImage path={item.project.cover_url} seed={item.project.id} className="h-16 w-16 rounded-lg" />
+                <CoverImage path={item.project.cover_url} seed={`${item.project.id}:${item.project.title}`} className="h-16 w-16 rounded-lg" />
               </Link>
               <div className="min-w-0 flex-1">
                 <div className="mb-2 flex items-center gap-2 text-xs text-muted-foreground">

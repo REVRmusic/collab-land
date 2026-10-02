@@ -32,7 +32,7 @@ export function ProjectCard({ p }: { p: ProjectRow }) {
     <article className="group rounded-2xl border border-border bg-card p-3 transition hover:border-primary/30 sm:p-4">
       <div className="flex gap-4">
         <Link to="/projects/$id" params={{ id: p.id }} className="shrink-0">
-          <CoverImage path={p.cover_url} seed={p.id} className="h-24 w-24 rounded-xl sm:h-36 sm:w-36" />
+          <CoverImage path={p.cover_url} seed={`${p.id}:${p.title}`} className="h-24 w-24 rounded-xl sm:h-36 sm:w-36" />
         </Link>
         <div className="flex min-w-0 flex-1 flex-col">
           <div className="flex items-start justify-between gap-2">
