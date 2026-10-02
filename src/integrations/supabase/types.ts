@@ -484,6 +484,10 @@ export type Database = {
     }
     Functions: {
       are_friends: { Args: { a: string; b: string }; Returns: boolean }
+      can_read_media: {
+        Args: { _bucket: string; _name: string; _uid: string }
+        Returns: boolean
+      }
       can_view_project: {
         Args: { _pid: string; _uid: string }
         Returns: boolean

@@ -20,7 +20,7 @@ export function useMe() {
     queryKey: ["me", uid],
     enabled: !!uid,
     queryFn: async () => {
-      const { data, error } = await supabase.from("profiles").select("*").eq("id", uid!).maybeSingle();
+      const { data, error } = await supabase.from("profiles").select("id,username,display_name,avatar_url,bio,email_digest,created_at").eq("id", uid!).maybeSingle();
       if (error) throw error;
       return data;
     },
