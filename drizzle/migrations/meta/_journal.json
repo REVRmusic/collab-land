@@ -36,6 +36,13 @@
       "when": 1790972350804,
       "tag": "0004_deletions_and_read_receipts",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790972845504,
+      "tag": "0005_help_needed_and_version_edit",
+      "breakpoints": true
     }
   ]
 }

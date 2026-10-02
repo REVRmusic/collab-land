@@ -385,6 +385,7 @@ export type Database = {
           description: string | null
           download_url: string | null
           genre: string | null
+          help_needed: string | null
           id: string
           musical_key: string | null
           owner_id: string
@@ -399,6 +400,7 @@ export type Database = {
           description?: string | null
           download_url?: string | null
           genre?: string | null
+          help_needed?: string | null
           id?: string
           musical_key?: string | null
           owner_id: string
@@ -413,6 +415,7 @@ export type Database = {
           description?: string | null
           download_url?: string | null
           genre?: string | null
+          help_needed?: string | null
           id?: string
           musical_key?: string | null
           owner_id?: string
