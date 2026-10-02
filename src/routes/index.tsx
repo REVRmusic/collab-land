@@ -60,7 +60,7 @@ function Landing() {
         </div>
         <div className="mt-14 rounded-2xl border border-border bg-card/70 p-5 backdrop-blur">
           <div className="mb-3 flex items-center justify-between text-sm">
-            <span className="font-display font-semibold">Night Drive — V4</span>
+            <span className="font-display font-semibold">Night Drive — V4 par Max</span>
             <span className="text-muted-foreground">124 BPM · A min</span>
           </div>
           <Waveform peaks={peaks} progress={0.38} height={90} />
