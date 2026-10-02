@@ -7,6 +7,7 @@ import { useMe } from "@/hooks/use-me";
 import { Input } from "@/components/ui/input";
 import { UserAvatar } from "@/components/UserAvatar";
 import { FriendButton } from "@/components/FriendButton";
+import { useFriends, type FriendProfile } from "@/hooks/use-friends";
 
 export const Route = createFileRoute("/_authenticated/friends")({
   head: () => ({
@@ -20,26 +21,7 @@ export const Route = createFileRoute("/_authenticated/friends")({
   component: FriendsPage,
 });
 
-type P = { id: string; username: string; display_name: string | null; avatar_url: string | null };
-
-export function useFriends(uid?: string) {
-  return useQuery({
-    queryKey: ["friends", uid],
-    enabled: !!uid,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("friendships")
-        .select("id,status,requester_id,addressee_id,requester:profiles!friendships_requester_id_fkey(id,username,display_name,avatar_url),addressee:profiles!friendships_addressee_id_fkey(id,username,display_name,avatar_url)");
-      if (error) throw error;
-      const rows = data as unknown as { id: string; status: string; requester_id: string; requester: P; addressee: P }[];
-      return {
-        friends: rows.filter((r) => r.status === "accepted").map((r) => (r.requester_id === uid ? r.addressee : r.requester)),
-        incoming: rows.filter((r) => r.status === "pending" && r.requester_id !== uid).map((r) => r.requester),
-        outgoing: rows.filter((r) => r.status === "pending" && r.requester_id === uid).map((r) => r.addressee),
-      };
-    },
-  });
-}
+type P = FriendProfile;
 
 function Row({ p, me }: { p: P; me: string }) {
   return (

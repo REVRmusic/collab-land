@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useMe } from "@/hooks/use-me";
 import { computePeaks, extOf, uploadFile } from "@/lib/media";
-import { useFriends } from "./friends";
+import { useFriends } from "@/hooks/use-friends";
 import { UserAvatar } from "@/components/UserAvatar";
 import { Waveform } from "@/components/Waveform";
 import { Input } from "@/components/ui/input";
