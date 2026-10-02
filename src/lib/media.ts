@@ -10,7 +10,11 @@ export async function uploadFile(bucket: Bucket, file: Blob, ext: string) {
   const { error } = await supabase.storage
     .from(bucket)
     .upload(path, file, file.type ? { contentType: file.type } : {});
-  if (error) throw error;
+  if (error) {
+    if (/maximum allowed size|exceeded|413/i.test(error.message))
+      throw new Error(`Fichier trop lourd (${(file.size / 1048576).toFixed(1)} Mo, max 200 Mo)`);
+    throw error;
+  }
   return path;
 }
 
@@ -92,4 +96,22 @@ export function timeAgo(date: string) {
   if (d < 86400) return `il y a ${Math.floor(d / 3600)} h`;
   if (d < 604800) return `il y a ${Math.floor(d / 86400)} j`;
   return new Date(date).toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+}
+
+/** Downscale/re-encode an image to JPEG so covers stay light. */
+export async function compressImage(file: File | Blob, maxSide = 2000, quality = 0.85): Promise<Blob> {
+  if (file.type === "image/gif") return file;
+  try {
+    const bmp = await createImageBitmap(file);
+    const scale = Math.min(1, maxSide / Math.max(bmp.width, bmp.height));
+    const c = document.createElement("canvas");
+    c.width = Math.round(bmp.width * scale);
+    c.height = Math.round(bmp.height * scale);
+    c.getContext("2d")!.drawImage(bmp, 0, 0, c.width, c.height);
+    bmp.close();
+    const out = await new Promise<Blob | null>((r) => c.toBlob(r, "image/jpeg", quality));
+    return out && out.size < file.size ? out : file;
+  } catch {
+    return file;
+  }
 }

@@ -3,7 +3,10 @@ const KBPS = 192;
 
 export async function compressAudio(file: File, onProgress?: (pct: number) => void): Promise<{ blob: Blob; ext: string }> {
   const isMp3 = file.type === "audio/mpeg" || /\.mp3$/i.test(file.name);
-  if (isMp3) return { blob: file, ext: "mp3" };
+  if (isMp3 && file.size <= 15 * 1048576) {
+    const d = await probeDuration(file);
+    if (!d || (file.size * 8) / d / 1000 <= 200) return { blob: file, ext: "mp3" };
+  }
 
   const { Mp3Encoder } = await import("@breezystack/lamejs");
   const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
@@ -48,3 +51,15 @@ export async function compressAudio(file: File, onProgress?: (pct: number) => vo
 }
 
 export const AUDIO_ACCEPT = "audio/*,.wav,.aif,.aiff,.flac,.mp3,.m4a";
+
+function probeDuration(file: Blob): Promise<number> {
+  return new Promise((res) => {
+    const a = document.createElement("audio");
+    const url = URL.createObjectURL(file);
+    const done = (v: number) => { URL.revokeObjectURL(url); res(isFinite(v) ? v : 0); };
+    a.preload = "metadata";
+    a.onloadedmetadata = () => done(a.duration);
+    a.onerror = () => done(0);
+    a.src = url;
+  });
+}
