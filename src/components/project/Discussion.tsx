@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CornerUpLeft, GitBranch, Mic, Plus, Send, X } from "lucide-react";
+import { CheckCheck, CornerUpLeft, GitBranch, Mic, Plus, Send, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { computePeaks, extOf, timeAgo, uploadFile } from "@/lib/media";
+import { computePeaks, extOf, removeFiles, timeAgo, uploadFile } from "@/lib/media";
+import { ConfirmDelete } from "@/components/ConfirmDelete";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { UserAvatar } from "@/components/UserAvatar";
 import { VoicePlayer } from "@/components/VoiceBubble";
 import { VoiceRecorder } from "@/components/VoiceRecorder";
@@ -71,6 +73,74 @@ export function Discussion({ projectId, uid }: { projectId: string; uid: string 
     bottom.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [q.data?.length]);
 
+  // ---- Read receipts ----
+  const myIds = (q.data ?? []).filter((m) => m.author.id === uid).map((m) => m.id);
+  const readsKey = ["reads", projectId, myIds.length];
+  const reads = useQuery({
+    queryKey: readsKey,
+    enabled: myIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("message_reads")
+        .select("message_id,read_at,reader:profiles!message_reads_user_id_fkey(id,username,display_name,avatar_url)")
+        .in("message_id", myIds);
+      if (error) throw error;
+      const map = new Map<string, Reader[]>();
+      for (const r of data as unknown as { message_id: string; read_at: string; reader: Author }[]) {
+        const arr = map.get(r.message_id) ?? [];
+        arr.push({ ...r.reader, read_at: r.read_at });
+        map.set(r.message_id, arr);
+      }
+      return map;
+    },
+  });
+
+  useEffect(() => {
+    const ch = supabase
+      .channel(`reads-${projectId}-${Math.random().toString(36).slice(2)}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "message_reads" }, () => {
+        qc.invalidateQueries({ queryKey: ["reads", projectId] });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [projectId, qc]);
+
+  const seen = useRef(new Set<string>());
+  const pending = useRef(new Set<string>());
+  const flushTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const observer = useRef<IntersectionObserver | null>(null);
+  useEffect(() => {
+    const flush = async () => {
+      const ids = [...pending.current];
+      pending.current.clear();
+      if (!ids.length) return;
+      await supabase.from("message_reads").upsert(ids.map((message_id) => ({ message_id, user_id: uid })), { onConflict: "message_id,user_id", ignoreDuplicates: true });
+    };
+    observer.current = new IntersectionObserver((entries) => {
+      if (document.visibilityState !== "visible") return;
+      for (const e of entries) {
+        const id = (e.target as HTMLElement).dataset['mid'];
+        if (e.isIntersecting && id && !seen.current.has(id)) {
+          seen.current.add(id);
+          pending.current.add(id);
+        }
+      }
+      if (flushTimer.current) clearTimeout(flushTimer.current);
+      flushTimer.current = setTimeout(flush, 600);
+    }, { threshold: 0.6 });
+    document.querySelectorAll<HTMLElement>("[data-mid]").forEach((el) => observer.current?.observe(el));
+    return () => { observer.current?.disconnect(); if (flushTimer.current) clearTimeout(flushTimer.current); void flush(); };
+  }, [uid]);
+  const observe = useCallback((el: HTMLElement | null) => { if (el) observer.current?.observe(el); }, []);
+
+  const deleteMsg = async (m: Msg) => {
+    const { error } = await supabase.from("messages").delete().eq("id", m.id);
+    if (error) { toast.error("Suppression impossible"); return; }
+    if (m.kind === "voice") await removeFiles("audio", [m.audio_url]);
+    toast.success("Message supprimé");
+    qc.invalidateQueries({ queryKey: key });
+  };
+
   const byId = new Map((q.data ?? []).map((m) => [m.id, m]));
 
   const send = async (payload: Record<string, unknown>) => {
@@ -136,11 +206,19 @@ export function Discussion({ projectId, uid }: { projectId: string; uid: string 
                     </span>
                   </div>
                 )}
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1" data-mid={mine ? undefined : m.id} ref={mine ? undefined : observe}>
+                  {mine && m.kind !== "version" && (
+                    <ConfirmDelete title={m.kind === "voice" ? "Supprimer ce vocal ?" : "Supprimer ce message ?"} onConfirm={() => deleteMsg(m)}>
+                      <button className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-muted-foreground opacity-60 hover:bg-accent hover:text-destructive sm:opacity-0 sm:group-hover:opacity-100" aria-label="Supprimer le message">
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </ConfirmDelete>
+                  )}
                   {mine && <ReplyBtn onClick={() => setReplyTo(m)} />}
                   <Bubble m={m} mine={mine} />
                   {!mine && <ReplyBtn onClick={() => setReplyTo(m)} />}
                 </div>
+                {mine && <SeenBy readers={reads.data?.get(m.id)} />}
               </div>
             </div>
           );
@@ -192,6 +270,37 @@ export function Discussion({ projectId, uid }: { projectId: string; uid: string 
         </div>
       </div>
     </div>
+  );
+}
+
+type Reader = Author & { read_at: string };
+
+function SeenBy({ readers }: { readers?: Reader[] | undefined }) {
+  if (!readers?.length) return null;
+  const sorted = [...readers].sort((a, b) => a.read_at.localeCompare(b.read_at));
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button className="mt-1 flex items-center gap-1.5 px-1 text-[11px] text-muted-foreground hover:text-foreground" aria-label="Voir qui a lu">
+          <CheckCheck className="h-3.5 w-3.5 text-primary" />
+          <span>Vu par</span>
+          <span className="flex -space-x-1.5">
+            {sorted.slice(0, 3).map((r) => <UserAvatar key={r.id} profile={r} className="h-4 w-4 ring-1 ring-card" />)}
+          </span>
+          {sorted.length > 3 && <span>+{sorted.length - 3}</span>}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-60 p-2">
+        <p className="px-2 pb-1 text-xs font-semibold text-muted-foreground">Vu par</p>
+        {sorted.map((r) => (
+          <div key={r.id} className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm">
+            <UserAvatar profile={r} className="h-6 w-6" />
+            <span className="min-w-0 flex-1 truncate">{r.display_name || r.username}</span>
+            <span className="text-xs text-muted-foreground">{timeAgo(r.read_at)}</span>
+          </div>
+        ))}
+      </PopoverContent>
+    </Popover>
   );
 }
 

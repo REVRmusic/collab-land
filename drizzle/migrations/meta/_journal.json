@@ -29,6 +29,13 @@
       "when": 1790948467028,
       "tag": "0003_fix_project_select_after_insert",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790972350804,
+      "tag": "0004_deletions_and_read_receipts",
+      "breakpoints": true
     }
   ]
 }

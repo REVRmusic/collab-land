@@ -115,3 +115,9 @@ export async function compressImage(file: File | Blob, maxSide = 2000, quality =
     return file;
   }
 }
+
+/** Best-effort removal of stored files (only the uploader's own files can be removed). */
+export async function removeFiles(bucket: Bucket, paths: (string | null | undefined)[]) {
+  const list = paths.filter((p): p is string => !!p && !/^https?:\/\//.test(p));
+  if (list.length) await supabase.storage.from(bucket).remove(list).catch(() => undefined);
+}
