@@ -42,7 +42,9 @@ export function EditProjectDialog({ project, uid, memberIds, onSaved }: { projec
     }).eq("id", project.id);
     if (error) { setBusy(false); toast.error("Enregistrement impossible"); return; }
     const want = visibility === "selected" ? selected : [];
-    const toRemove = memberIds.filter((m) => !want.includes(m));
+    // Only manage friends here; collaborators who joined via an invite link are kept.
+    const friendIds = new Set((friends.data?.friends ?? []).map((fr) => fr.id));
+    const toRemove = visibility === "selected" ? memberIds.filter((m) => friendIds.has(m) && !want.includes(m)) : [];
     const toAdd = want.filter((m) => !memberIds.includes(m));
     if (toRemove.length) await supabase.from("project_members").delete().eq("project_id", project.id).in("user_id", toRemove);
     if (toAdd.length) await supabase.from("project_members").insert(toAdd.map((user_id) => ({ project_id: project.id, user_id })));
