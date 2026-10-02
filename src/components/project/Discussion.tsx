@@ -119,7 +119,7 @@ export function Discussion({ projectId, uid }: { projectId: string; uid: string 
     observer.current = new IntersectionObserver((entries) => {
       if (document.visibilityState !== "visible") return;
       for (const e of entries) {
-        const id = (e.target as HTMLElement).dataset.mid;
+        const id = (e.target as HTMLElement).dataset['mid'];
         if (e.isIntersecting && id && !seen.current.has(id)) {
           seen.current.add(id);
           pending.current.add(id);
@@ -128,6 +128,7 @@ export function Discussion({ projectId, uid }: { projectId: string; uid: string 
       if (flushTimer.current) clearTimeout(flushTimer.current);
       flushTimer.current = setTimeout(flush, 600);
     }, { threshold: 0.6 });
+    document.querySelectorAll<HTMLElement>("[data-mid]").forEach((el) => observer.current?.observe(el));
     return () => { observer.current?.disconnect(); if (flushTimer.current) clearTimeout(flushTimer.current); void flush(); };
   }, [uid]);
   const observe = useCallback((el: HTMLElement | null) => { if (el) observer.current?.observe(el); }, []);
@@ -274,7 +275,7 @@ export function Discussion({ projectId, uid }: { projectId: string; uid: string 
 
 type Reader = Author & { read_at: string };
 
-function SeenBy({ readers }: { readers?: Reader[] }) {
+function SeenBy({ readers }: { readers?: Reader[] | undefined }) {
   if (!readers?.length) return null;
   const sorted = [...readers].sort((a, b) => a.read_at.localeCompare(b.read_at));
   return (
