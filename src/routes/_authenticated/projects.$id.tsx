@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Download, GitBranch, ImagePlus, Layers, LifeBuoy, Lock, MessageCircle, Palette, Plus, Star, Trash2, Users } from "lucide-react";
+import { linkHost } from "@/lib/links";
 import { EditProjectDialog, EditVersionDialog } from "@/components/project/EditProjectDialog";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,20 +34,6 @@ export const Route = createFileRoute("/_authenticated/projects/$id")({
 
 type Prof = { id: string; username: string; display_name: string | null; avatar_url: string | null };
 
-function linkHost(url: string) {
-  try {
-    const h = new URL(url).hostname;
-    if (h.includes("wetransfer") || h.includes("we.tl")) return "WeTransfer";
-    if (h.includes("swisstransfer")) return "SwissTransfer";
-    if (h.includes("drive.google")) return "Google Drive";
-    if (h.includes("dropbox")) return "Dropbox";
-    if (h.includes("icloud")) return "iCloud Drive";
-    return h;
-  } catch {
-    return "Lien";
-  }
-}
-
 function ProjectPage() {
   const { id } = Route.useParams();
   const { uid } = useMe();
@@ -74,7 +61,7 @@ function ProjectPage() {
         .eq("project_id", id)
         .order("version_number", { ascending: false });
       if (error) throw error;
-      return data as unknown as { id: string; version_number: number; title: string | null; notes: string | null; audio_url: string; peaks: number[] | null; duration: number | null; created_at: string; author: Prof }[];
+      return data as unknown as { id: string; version_number: number; title: string | null; notes: string | null; download_url: string | null; audio_url: string; peaks: number[] | null; duration: number | null; created_at: string; author: Prof }[];
     },
   });
 
@@ -82,6 +69,7 @@ function ProjectPage() {
   const p = project.data;
   if (!p) return <p className="text-muted-foreground">Ce projet n'existe pas ou ne t'est pas partagé.</p>;
   const latest = versions.data?.[0];
+  const dl = versions.data?.find((v) => v.download_url);
   const isOwner = uid === p.owner_id;
 
   return (
@@ -116,9 +104,9 @@ function ProjectPage() {
           </div>
         </div>
         <div className="mt-5 flex flex-wrap items-center gap-2">
-          {p.download_url && (
-            <a href={p.download_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-lg bg-secondary px-4 py-2.5 text-sm font-medium hover:bg-accent">
-              <Download className="h-4 w-4" />Télécharger · {linkHost(p.download_url)}
+          {dl?.download_url && (
+            <a href={dl.download_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90">
+              <Download className="h-4 w-4" />Télécharger V{dl.version_number} · {linkHost(dl.download_url)}
             </a>
           )}
           {uid && !isOwner && <StemRequestButton projectId={id} uid={uid} />}
@@ -183,6 +171,11 @@ function ProjectPage() {
                   </div>
                   <TrackPlayer path={v.audio_url} peaks={v.peaks} duration={v.duration} size="sm" height={60} />
                   {v.notes && <p className="mt-3 text-sm text-foreground/80">{v.notes}</p>}
+                  {v.download_url && (
+                    <a href={v.download_url} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-2 rounded-lg bg-secondary px-3 py-1.5 text-xs font-medium hover:bg-accent">
+                      <Download className="h-3.5 w-3.5" />Télécharger V{v.version_number} · {linkHost(v.download_url)}
+                    </a>
+                  )}
                 </div>
               </li>
             ))}

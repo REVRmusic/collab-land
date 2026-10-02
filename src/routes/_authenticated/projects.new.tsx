@@ -1,3 +1,4 @@
+import { cleanLink } from "@/lib/links";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -53,6 +54,8 @@ function NewProject() {
     e.preventDefault();
     if (!audio || !uid) { toast.error("Ajoute un extrait audio"); return; }
     if (visibility === "selected" && selected.length === 0) { toast.error("Choisis au moins un ami"); return; }
+    let download_url: string | null;
+    try { download_url = cleanLink(f.download_url); } catch (err) { toast.error((err as Error).message); return; }
     setBusy(true);
     try {
       const w = wave ?? (await computePeaks(audio));
@@ -70,7 +73,6 @@ function NewProject() {
           musical_key: f.musical_key || null,
           description: f.description || null,
           help_needed: f.help_needed.trim() || null,
-          download_url: f.download_url || null,
           cover_url: coverPath,
           visibility,
         })
@@ -87,6 +89,7 @@ function NewProject() {
         audio_url: audioPath,
         peaks: w.peaks,
         duration: w.duration,
+        download_url,
       });
       if (coverPath) await supabase.from("covers").insert({ project_id: project.id, author_id: uid, image_url: coverPath, caption: "Cover originale" });
       qc.invalidateQueries();
@@ -141,7 +144,7 @@ function NewProject() {
       <div className="space-y-1.5"><Label>Besoin d'aide sur… (optionnel)</Label><Input value={f.help_needed} onChange={(e) => setF({ ...f, help_needed: e.target.value })} placeholder="Besoin d'un drop plus impactant" /></div>
       <div className="space-y-1.5"><Label>Description</Label><Textarea rows={3} value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} /></div>
       <div className="space-y-1.5">
-        <Label>Lien de téléchargement du projet (optionnel)</Label>
+        <Label>Lien de téléchargement de la V1 (optionnel)</Label>
         <Input type="url" value={f.download_url} onChange={(e) => setF({ ...f, download_url: e.target.value })} placeholder="WeTransfer, SwissTransfer, Google Drive, Dropbox, iCloud…" />
       </div>
 
