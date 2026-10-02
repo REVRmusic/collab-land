@@ -1,11 +1,13 @@
 -- Showcase: projects visible on a public artist page
 ALTER TABLE public.projects
-ADD COLUMN showcase boolean NOT NULL DEFAULT false;
+ADD COLUMN IF NOT EXISTS showcase boolean NOT NULL DEFAULT false;
 
+DROP POLICY IF EXISTS "projects showcase read" ON public.projects;
 CREATE POLICY "projects showcase read" ON public.projects
 FOR SELECT TO anon, authenticated
 USING (showcase = true);
 
+DROP POLICY IF EXISTS "versions showcase read" ON public.project_versions;
 CREATE POLICY "versions showcase read" ON public.project_versions
 FOR SELECT TO anon, authenticated
 USING (EXISTS (
@@ -15,6 +17,7 @@ USING (EXISTS (
 
 -- Public profile fields for anonymous visitors
 GRANT SELECT (id, username, display_name, avatar_url, bio, created_at) ON public.profiles TO anon;
+DROP POLICY IF EXISTS "profiles public read" ON public.profiles;
 CREATE POLICY "profiles public read" ON public.profiles
 FOR SELECT TO anon
 USING (true);
@@ -82,9 +85,9 @@ REVOKE ALL ON FUNCTION public.is_showcase_media(text, text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.is_showcase_media(text, text) TO anon, authenticated;
 
 -- Invite links (join as collaborator without being friends)
-CREATE TABLE public.project_invites (
+CREATE TABLE IF NOT EXISTS public.project_invites (
   project_id uuid PRIMARY KEY REFERENCES public.projects(id) ON DELETE CASCADE,
-  token text NOT NULL UNIQUE DEFAULT encode(gen_random_bytes(18), 'hex'),
+  token text NOT NULL UNIQUE DEFAULT encode(extensions.gen_random_bytes(18), 'hex'),
   created_by uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   created_at timestamptz NOT NULL DEFAULT now(),
   revoked_at timestamptz
@@ -94,6 +97,7 @@ GRANT SELECT, INSERT, UPDATE ON public.project_invites TO authenticated;
 GRANT ALL ON public.project_invites TO service_role;
 ALTER TABLE public.project_invites ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "invites owner manage" ON public.project_invites;
 CREATE POLICY "invites owner manage" ON public.project_invites
 FOR ALL TO authenticated
 USING (public.is_project_owner(project_id, auth.uid()))
