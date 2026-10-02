@@ -50,6 +50,7 @@ export function NewVersionDialog({ projectId, uid, trigger }: { projectId: strin
       setTitle("");
       setNotes("");
     } catch (e) {
+      toast.dismiss("compress");
       toast.error((e as Error).message);
     } finally {
       setBusy(false);
