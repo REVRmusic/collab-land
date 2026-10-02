@@ -41,11 +41,11 @@ function SettingsPage() {
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
     const username = form.username.trim().toLowerCase();
-    if (!/^[a-z0-9_.]{3,24}$/.test(username)) return toast.error("Nom d'utilisateur : 3 à 24 caractères (lettres, chiffres, _ et .)");
+    if (!/^[a-z0-9_.]{3,24}$/.test(username)) { toast.error("Nom d'utilisateur : 3 à 24 caractères (lettres, chiffres, _ et .)"); return; }
     setBusy(true);
     const { error } = await supabase.from("profiles").update({ ...form, username }).eq("id", uid!);
     setBusy(false);
-    if (error) return toast.error(error.code === "23505" ? "Ce nom d'utilisateur est déjà pris" : "Enregistrement impossible");
+    if (error) { toast.error(error.code === "23505" ? "Ce nom d'utilisateur est déjà pris" : "Enregistrement impossible"); return; }
     toast.success("Profil mis à jour");
     qc.invalidateQueries();
   };

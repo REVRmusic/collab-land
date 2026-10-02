@@ -23,6 +23,7 @@ function NotificationsPage() {
       const t = setTimeout(markAll, 1500);
       return () => clearTimeout(t);
     }
+    return undefined;
   }, [unread, markAll]);
   return (
     <div className="mx-auto max-w-2xl">

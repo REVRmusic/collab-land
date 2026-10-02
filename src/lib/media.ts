@@ -9,7 +9,7 @@ export async function uploadFile(bucket: Bucket, file: Blob, ext: string) {
   const path = `${data.user.id}/${crypto.randomUUID()}.${ext}`;
   const { error } = await supabase.storage
     .from(bucket)
-    .upload(path, file, { contentType: file.type || undefined });
+    .upload(path, file, file.type ? { contentType: file.type } : {});
   if (error) throw error;
   return path;
 }
@@ -61,7 +61,7 @@ export async function computePeaks(blob: Blob, buckets = 180): Promise<{ peaks: 
       const step = Math.max(1, Math.floor(size / 400));
       let n = 0;
       for (let j = start; j < start + size && j < ch.length; j += step) {
-        const v = Math.abs(ch2 ? (ch[j] + ch2[j]) / 2 : ch[j]);
+        const v = Math.abs(ch2 ? ((ch[j] ?? 0) + (ch2[j] ?? 0)) / 2 : (ch[j] ?? 0));
         if (v > max) max = v;
         sum += v * v;
         n++;

@@ -38,7 +38,7 @@ export function Waveform({
   useEffect(() => {
     const el = wrap.current;
     if (!el) return;
-    const ro = new ResizeObserver(([e]) => setWidth(e.contentRect.width));
+    const ro = new ResizeObserver(([e]) => e && setWidth(e.contentRect.width));
     ro.observe(el);
     return () => ro.disconnect();
   }, []);

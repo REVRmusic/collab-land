@@ -75,7 +75,7 @@ export function Discussion({ projectId, uid }: { projectId: string; uid: string 
 
   const send = async (payload: Record<string, unknown>) => {
     const { error } = await supabase.from("messages").insert({ project_id: projectId, author_id: uid, reply_to_id: replyTo?.id ?? null, ...payload });
-    if (error) return toast.error("Envoi impossible");
+    if (error) { toast.error("Envoi impossible"); return; }
     setReplyTo(null);
     qc.invalidateQueries({ queryKey: key });
   };

@@ -54,7 +54,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="lg:hidden"><Logo /></div>
           <div className="hidden lg:block" />
           <div className="flex items-center gap-1">
-            <div className="hidden lg:block"><NotificationBell uid={uid} /></div>
+            <div className="hidden lg:block"><NotificationBell uid={uid ?? undefined} /></div>
             <Link to="/settings" className="lg:hidden"><UserAvatar profile={profile} className="h-8 w-8" /></Link>
           </div>
         </div>

@@ -47,7 +47,7 @@ export function VoicePlayer({
         {(a.playing || a.time > 0) && (
           <button
             type="button"
-            onClick={() => a.setRate(rates[(rates.indexOf(a.rate) + 1) % rates.length])}
+            onClick={() => a.setRate(rates[(rates.indexOf(a.rate) + 1) % rates.length] ?? 1)}
             className="rounded-full bg-background/25 px-2 py-0.5 text-[11px] font-semibold"
           >
             {a.rate}x

@@ -19,11 +19,11 @@ export type Notif = {
 
 export function notifText(n: Notif) {
   const who = n.actor?.display_name || n.actor?.username || "Quelqu'un";
-  const t = (n.data?.title as string) ?? "un projet";
+  const t = (n.data?.['title'] as string) ?? "un projet";
   switch (n.type) {
     case "new_project": return <><b>{who}</b> a partagé un nouveau projet : <b>{t}</b></>;
-    case "new_version": return <><b>{who}</b> a publié la V{String(n.data?.version ?? "")} de <b>{t}</b></>;
-    case "new_message": return <><b>{who}</b> a {n.data?.kind === "voice" ? "envoyé un vocal" : "écrit"} dans <b>{t}</b></>;
+    case "new_version": return <><b>{who}</b> a publié la V{String(n.data?.['version'] ?? "")} de <b>{t}</b></>;
+    case "new_message": return <><b>{who}</b> a {n.data?.['kind'] === "voice" ? "envoyé un vocal" : "écrit"} dans <b>{t}</b></>;
     case "new_cover": return <><b>{who}</b> a proposé une cover pour <b>{t}</b></>;
     case "friend_request": return <><b>{who}</b> veut t'ajouter en ami</>;
     case "friend_accepted": return <><b>{who}</b> a accepté ta demande d'ami</>;
@@ -88,7 +88,7 @@ export function NotifRow({ n }: { n: Notif }) {
   );
 }
 
-export function NotificationBell({ uid }: { uid?: string }) {
+export function NotificationBell({ uid }: { uid?: string | undefined }) {
   const { items, unread, markAll } = useNotifications(uid);
   return (
     <Popover onOpenChange={(o) => !o && unread && markAll()}>

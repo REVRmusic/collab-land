@@ -50,8 +50,8 @@ function NewProject() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!audio || !uid) return toast.error("Ajoute un extrait audio");
-    if (visibility === "selected" && selected.length === 0) return toast.error("Choisis au moins un ami");
+    if (!audio || !uid) { toast.error("Ajoute un extrait audio"); return; }
+    if (visibility === "selected" && selected.length === 0) { toast.error("Choisis au moins un ami"); return; }
     setBusy(true);
     try {
       const w = wave ?? (await computePeaks(audio));

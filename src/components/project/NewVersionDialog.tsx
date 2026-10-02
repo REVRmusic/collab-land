@@ -27,7 +27,7 @@ export function NewVersionDialog({ projectId, uid, trigger }: { projectId: strin
   };
 
   const submit = async () => {
-    if (!file) return toast.error("Ajoute un fichier audio");
+    if (!file) { toast.error("Ajoute un fichier audio"); return; }
     setBusy(true);
     try {
       const w = wave ?? (await computePeaks(file));

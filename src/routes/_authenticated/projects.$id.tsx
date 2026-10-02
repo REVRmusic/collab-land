@@ -181,7 +181,7 @@ function StemRequestButton({ projectId, uid }: { projectId: string; uid: string 
         <Button
           onClick={async () => {
             const { error } = await supabase.from("stem_requests").insert({ project_id: projectId, requester_id: uid, message: msg || null });
-            if (error) return toast.error("Demande impossible");
+            if (error) { toast.error("Demande impossible"); return; }
             toast.success("Demande envoyée");
             setOpen(false);
             qc.invalidateQueries({ queryKey: key });
