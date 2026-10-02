@@ -4,6 +4,7 @@ import { Upload } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { computePeaks, extOf, uploadFile } from "@/lib/media";
+import { compressAudio, AUDIO_ACCEPT } from "@/lib/audio-compress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,7 +32,7 @@ export function NewVersionDialog({ projectId, uid, trigger }: { projectId: strin
     setBusy(true);
     try {
       const w = wave ?? (await computePeaks(file));
-      const path = await uploadFile("audio", file, extOf(file, "mp3"));
+      const path = await compressAudio(file, (p) => toast.loading(`Compression… ${p} %`, { id: "compress" })).then((c) => { toast.dismiss("compress"); return uploadFile("audio", c.blob, c.ext); });
       const { data: v, error } = await supabase
         .from("project_versions")
         .insert({ project_id: projectId, author_id: uid, title: title || null, notes: notes || null, audio_url: path, peaks: w.peaks, duration: w.duration })
@@ -61,7 +62,7 @@ export function NewVersionDialog({ projectId, uid, trigger }: { projectId: strin
       <DialogContent>
         <DialogHeader><DialogTitle>Publier une nouvelle version</DialogTitle></DialogHeader>
         <label className="block cursor-pointer rounded-xl border border-dashed border-border p-4 hover:border-primary/50">
-          <input type="file" accept="audio/*" hidden onChange={(e) => pick(e.target.files?.[0])} />
+          <input type="file" accept={AUDIO_ACCEPT} hidden onChange={(e) => pick(e.target.files?.[0])} />
           {file ? (
             <>
               <p className="mb-2 truncate text-sm">{file.name}</p>
