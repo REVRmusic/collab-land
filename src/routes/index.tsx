@@ -31,12 +31,12 @@ function Landing() {
   );
 
   const features = [
-    { icon: GitBranch, t: "Historique des versions", d: "Chaque V2, V3… avec sa pré-écoute et ses notes." },
-    { icon: Lock, t: "Partage ciblé", d: "Tous tes amis, ou seulement ceux que tu choisis." },
-    { icon: Mic, t: "Vocaux dans le fil", d: "Envoie et réponds en vocal, comme sur Instagram." },
-    { icon: Download, t: "Stems & liens", d: "Demande les stems ou récupère le projet en un clic." },
-    { icon: Palette, t: "Covers", d: "Propose des artworks et choisis la cover finale." },
-    { icon: Bell, t: "Notifications", d: "Cloche en temps réel et résumé quotidien." },
+    { icon: GitBranch, t: "Faites avancer le morceau", d: "Chaque V2, V3… avec sa pré-écoute : tout le monde suit où en est le projet." },
+    { icon: Lock, t: "À plusieurs, à ta manière", d: "Ouvre le projet à tous tes amis ou seulement à ceux que tu choisis." },
+    { icon: Mic, t: "Discutez, en vocal", d: "Réagis à une version d'un simple vocal, comme sur Instagram." },
+    { icon: Download, t: "Échangez les stems", d: "Demande les stems ou récupère la dernière version en un clic." },
+    { icon: Palette, t: "Construisez l'identité", d: "Chacun propose des covers, le morceau trouve sa pochette." },
+    { icon: Bell, t: "Personne ne rate un passage", d: "Cloche en temps réel : une nouvelle version, un vocal, et chacun le sait." },
   ];
 
   return (
