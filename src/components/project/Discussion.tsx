@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { linkHost } from "@/lib/links";
-import { CheckCheck, Download, CornerUpLeft, GitBranch, Mic, Plus, Send, Trash2, X } from "lucide-react";
+import { ArrowLeft, CheckCheck, Download, CornerUpLeft, GitBranch, Mic, Plus, Send, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { computePeaks, extOf, removeFiles, timeAgo, uploadFile } from "@/lib/media";
@@ -34,14 +34,20 @@ function preview(m?: Msg) {
   return m.body ?? "";
 }
 
-export function Discussion({ projectId, uid }: { projectId: string; uid: string }) {
+export function Discussion({ projectId, uid, projectTitle, mobileOpen, onMobileClose }: { projectId: string; uid: string; projectTitle: string; mobileOpen: boolean; onMobileClose: () => void }) {
   const qc = useQueryClient();
   const key = ["messages", projectId];
   const [text, setText] = useState("");
   const [recording, setRecording] = useState(false);
+  const [voiceLocked, setVoiceLocked] = useState(false);
+  const [finishAction, setFinishAction] = useState<"send" | "cancel" | null>(null);
   const [replyTo, setReplyTo] = useState<Msg | null>(null);
   const [sending, setSending] = useState(false);
   const bottom = useRef<HTMLDivElement>(null);
+  const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const gestureStarted = useRef(false);
+  const gestureLocked = useRef(false);
+  const gestureOrigin = useRef({ x: 0, y: 0 });
 
   const q = useQuery({
     queryKey: key,
@@ -72,7 +78,14 @@ export function Discussion({ projectId, uid }: { projectId: string; uid: string 
 
   useEffect(() => {
     bottom.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  }, [q.data?.length]);
+  }, [q.data?.length, mobileOpen]);
+
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = previous; };
+  }, [mobileOpen]);
 
   // ---- Read receipts ----
   const myIds = (q.data ?? []).filter((m) => m.author.id === uid).map((m) => m.id);
@@ -162,6 +175,8 @@ export function Discussion({ projectId, uid }: { projectId: string; uid: string 
   const onVoice = useCallback(
     async (blob: Blob) => {
       setRecording(false);
+      setVoiceLocked(false);
+      setFinishAction(null);
       setSending(true);
       try {
         const w = await computePeaks(blob, 48);
@@ -177,8 +192,83 @@ export function Discussion({ projectId, uid }: { projectId: string; uid: string 
     [replyTo],
   );
 
+  const resetVoice = useCallback(() => {
+    setRecording(false);
+    setVoiceLocked(false);
+    setFinishAction(null);
+    gestureStarted.current = false;
+    gestureLocked.current = false;
+  }, []);
+
+  const closeMobileDiscussion = () => {
+    if (recording) setFinishAction("cancel");
+    onMobileClose();
+  };
+
+  const startVoiceGesture = (e: React.PointerEvent<HTMLButtonElement>) => {
+    if (sending) return;
+    e.preventDefault();
+    gestureOrigin.current = { x: e.clientX, y: e.clientY };
+    gestureStarted.current = false;
+    gestureLocked.current = false;
+    setFinishAction(null);
+
+    const cleanup = () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+      window.removeEventListener("pointercancel", cancel);
+    };
+    const move = (event: PointerEvent) => {
+      if (!gestureStarted.current) return;
+      const dx = event.clientX - gestureOrigin.current.x;
+      const dy = event.clientY - gestureOrigin.current.y;
+      if (dx < -90) {
+        setFinishAction("cancel");
+        cleanup();
+      } else if (dy < -70) {
+        gestureLocked.current = true;
+        setVoiceLocked(true);
+        cleanup();
+      }
+    };
+    const up = () => {
+      if (holdTimer.current) clearTimeout(holdTimer.current);
+      if (!gestureStarted.current) {
+        setRecording(true);
+        setVoiceLocked(true);
+      } else if (!gestureLocked.current) {
+        setFinishAction("send");
+      }
+      cleanup();
+    };
+    const cancel = () => {
+      if (holdTimer.current) clearTimeout(holdTimer.current);
+      if (gestureStarted.current) setFinishAction("cancel");
+      cleanup();
+    };
+
+    window.addEventListener("pointermove", move, { passive: true });
+    window.addEventListener("pointerup", up, { once: true });
+    window.addEventListener("pointercancel", cancel, { once: true });
+    holdTimer.current = setTimeout(() => {
+      gestureStarted.current = true;
+      setRecording(true);
+      setVoiceLocked(false);
+    }, 180);
+  };
+
   return (
-    <div className="flex h-[70vh] min-h-[480px] flex-col overflow-hidden rounded-2xl border border-border bg-card">
+    <div className={`${mobileOpen ? "fixed inset-0 z-50 flex h-[100dvh]" : "hidden"} flex-col overflow-hidden bg-card md:flex md:h-[70vh] md:min-h-[480px] md:rounded-2xl md:border md:border-border`}>
+      <div className="grid h-14 shrink-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-b border-border px-3 md:hidden">
+        <button type="button" onClick={closeMobileDiscussion} className="grid h-10 w-10 place-items-center rounded-full hover:bg-accent" aria-label="Retour au projet">
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+        <div className="min-w-0 text-center">
+          <p className="truncate font-display font-semibold">{projectTitle}</p>
+          <p className="text-xs text-muted-foreground">Discussion</p>
+        </div>
+        <span className="h-10 w-10" />
+      </div>
       <div className="flex-1 space-y-1 overflow-y-auto p-3 sm:p-5">
         {q.data?.length === 0 && (
           <p className="py-16 text-center text-sm text-muted-foreground">Lance la discussion : un message, un vocal ou une nouvelle version.</p>
@@ -227,7 +317,7 @@ export function Discussion({ projectId, uid }: { projectId: string; uid: string 
         <div ref={bottom} />
       </div>
 
-      <div className="border-t border-border p-3">
+      <div className="shrink-0 border-t border-border bg-card p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] sm:p-3">
         {replyTo && (
           <div className="mb-2 flex items-center justify-between gap-2 rounded-xl bg-surface-2 px-3 py-2 text-sm">
             <div className="min-w-0">
@@ -239,7 +329,7 @@ export function Discussion({ projectId, uid }: { projectId: string; uid: string 
         )}
         <div className="flex items-center gap-2 rounded-full bg-surface-2 p-1.5 pl-2">
           {recording ? (
-            <VoiceRecorder onDone={onVoice} onCancel={() => setRecording(false)} />
+            <VoiceRecorder onDone={onVoice} onCancel={resetVoice} finishAction={finishAction} locked={voiceLocked} />
           ) : (
             <>
               <NewVersionDialog
@@ -256,12 +346,12 @@ export function Discussion({ projectId, uid }: { projectId: string; uid: string 
                   value={text}
                   onChange={(e) => setText(e.target.value)}
                   placeholder={sending ? "Envoi du vocal…" : "Ton message…"}
-                  className="min-w-0 flex-1 bg-transparent px-2 py-2 text-sm outline-none placeholder:text-muted-foreground"
+                  className="min-w-0 flex-1 bg-transparent px-2 py-2 text-base outline-none placeholder:text-muted-foreground md:text-sm"
                 />
                 {text.trim() ? (
                   <button type="submit" className="grid h-9 w-9 place-items-center rounded-full text-primary" aria-label="Envoyer"><Send className="h-4 w-4" /></button>
                 ) : (
-                  <button type="button" onClick={() => setRecording(true)} disabled={sending} className="grid h-9 w-9 place-items-center rounded-full hover:bg-accent" aria-label="Enregistrer un vocal">
+                  <button type="button" onPointerDown={startVoiceGesture} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setRecording(true); setVoiceLocked(true); } }} disabled={sending} className="grid h-10 w-10 shrink-0 touch-none place-items-center rounded-full hover:bg-accent" aria-label="Maintenir pour enregistrer un vocal" aria-pressed={recording}>
                     <Mic className="h-5 w-5" />
                   </button>
                 )}

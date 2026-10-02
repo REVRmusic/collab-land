@@ -19,6 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export const Route = createFileRoute("/_authenticated/projects/$id")({
   head: () => ({
@@ -39,6 +40,8 @@ function ProjectPage() {
   const { uid } = useMe();
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
+  const [mobileDiscussionOpen, setMobileDiscussionOpen] = useState(false);
 
   const project = useQuery({
     queryKey: ["project", id],
@@ -137,11 +140,20 @@ function ProjectPage() {
 
       <Tabs defaultValue="discussion" className="mt-6">
         <TabsList className="w-full justify-start sm:w-auto">
-          <TabsTrigger value="discussion"><MessageCircle className="h-4 w-4" />Discussion</TabsTrigger>
+          <TabsTrigger value="discussion" onClick={() => { if (isMobile) setMobileDiscussionOpen(true); }}><MessageCircle className="h-4 w-4" />Discussion</TabsTrigger>
           <TabsTrigger value="versions"><GitBranch className="h-4 w-4" />Versions ({versions.data?.length ?? 0})</TabsTrigger>
           <TabsTrigger value="covers"><Palette className="h-4 w-4" />Covers</TabsTrigger>
         </TabsList>
-        <TabsContent value="discussion" className="mt-4">{uid && <Discussion projectId={id} uid={uid} />}</TabsContent>
+        <TabsContent value="discussion" className="mt-4">
+          {uid && (
+            <>
+              <Button className="h-12 w-full md:hidden" onClick={() => setMobileDiscussionOpen(true)}>
+                <MessageCircle className="h-4 w-4" />Ouvrir la discussion
+              </Button>
+              <Discussion projectId={id} uid={uid} projectTitle={p.title} mobileOpen={mobileDiscussionOpen} onMobileClose={() => setMobileDiscussionOpen(false)} />
+            </>
+          )}
+        </TabsContent>
         <TabsContent value="versions" className="mt-4">
           <ol className="relative space-y-4 border-l border-border pl-6">
             {versions.data?.map((v, i) => (
