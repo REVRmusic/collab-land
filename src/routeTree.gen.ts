@@ -16,6 +16,7 @@ import { Route as AuthenticatedFeedRouteImport } from './routes/_authenticated/f
 import { Route as AuthenticatedFriendsRouteImport } from './routes/_authenticated/friends'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedProjectsIdRouteImport } from './routes/_authenticated/projects.$id'
 import { Route as AuthenticatedProjectsNewRouteImport } from './routes/_authenticated/projects.new'
 import { Route as AuthenticatedUUsernameRouteImport } from './routes/_authenticated/u.$username'
 
@@ -54,6 +55,11 @@ const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedProjectsIdRoute = AuthenticatedProjectsIdRouteImport.update({
+  id: '/projects/$id',
+  path: '/projects/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedProjectsNewRoute =
   AuthenticatedProjectsNewRouteImport.update({
     id: '/projects/new',
@@ -73,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/friends': typeof AuthenticatedFriendsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/projects/$id': typeof AuthenticatedProjectsIdRoute
   '/projects/new': typeof AuthenticatedProjectsNewRoute
   '/u/$username': typeof AuthenticatedUUsernameRoute
 }
@@ -83,6 +90,7 @@ export interface FileRoutesByTo {
   '/friends': typeof AuthenticatedFriendsRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/projects/$id': typeof AuthenticatedProjectsIdRoute
   '/projects/new': typeof AuthenticatedProjectsNewRoute
   '/u/$username': typeof AuthenticatedUUsernameRoute
 }
@@ -95,6 +103,7 @@ export interface FileRoutesById {
   '/_authenticated/friends': typeof AuthenticatedFriendsRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/projects/$id': typeof AuthenticatedProjectsIdRoute
   '/_authenticated/projects/new': typeof AuthenticatedProjectsNewRoute
   '/_authenticated/u/$username': typeof AuthenticatedUUsernameRoute
 }
@@ -107,6 +116,7 @@ export interface FileRouteTypes {
     | '/friends'
     | '/notifications'
     | '/settings'
+    | '/projects/$id'
     | '/projects/new'
     | '/u/$username'
   fileRoutesByTo: FileRoutesByTo
@@ -117,6 +127,7 @@ export interface FileRouteTypes {
     | '/friends'
     | '/notifications'
     | '/settings'
+    | '/projects/$id'
     | '/projects/new'
     | '/u/$username'
   id:
@@ -128,6 +139,7 @@ export interface FileRouteTypes {
     | '/_authenticated/friends'
     | '/_authenticated/notifications'
     | '/_authenticated/settings'
+    | '/_authenticated/projects/$id'
     | '/_authenticated/projects/new'
     | '/_authenticated/u/$username'
   fileRoutesById: FileRoutesById
@@ -189,6 +201,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/projects/$id': {
+      id: '/_authenticated/projects/$id'
+      path: '/projects/$id'
+      fullPath: '/projects/$id'
+      preLoaderRoute: typeof AuthenticatedProjectsIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/projects/new': {
       id: '/_authenticated/projects/new'
       path: '/projects/new'
@@ -211,6 +230,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedFriendsRoute: typeof AuthenticatedFriendsRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedProjectsIdRoute: typeof AuthenticatedProjectsIdRoute
   AuthenticatedProjectsNewRoute: typeof AuthenticatedProjectsNewRoute
   AuthenticatedUUsernameRoute: typeof AuthenticatedUUsernameRoute
 }
@@ -220,6 +240,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedFriendsRoute: AuthenticatedFriendsRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedProjectsIdRoute: AuthenticatedProjectsIdRoute,
   AuthenticatedProjectsNewRoute: AuthenticatedProjectsNewRoute,
   AuthenticatedUUsernameRoute: AuthenticatedUUsernameRoute,
 }
