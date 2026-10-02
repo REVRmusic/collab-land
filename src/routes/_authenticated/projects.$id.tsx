@@ -64,7 +64,7 @@ function ProjectPage() {
         .eq("project_id", id)
         .order("version_number", { ascending: false });
       if (error) throw error;
-      return data as unknown as { id: string; version_number: number; title: string | null; notes: string | null; download_url: string | null; audio_url: string; peaks: number[] | null; duration: number | null; created_at: string; author: Prof }[];
+      return data as unknown as { id: string; version_number: number; title: string | null; notes: string | null; download_url: string | null; stems_url: string | null; audio_url: string; peaks: number[] | null; duration: number | null; created_at: string; author: Prof }[];
     },
   });
 
@@ -73,6 +73,7 @@ function ProjectPage() {
   if (!p) return <p className="text-muted-foreground">Ce projet n'existe pas ou ne t'est pas partagé.</p>;
   const latest = versions.data?.[0];
   const dl = versions.data?.find((v) => v.download_url);
+  const stems = versions.data?.find((v) => v.stems_url);
   const isOwner = uid === p.owner_id;
 
   return (
@@ -109,10 +110,15 @@ function ProjectPage() {
         <div className="mt-5 flex flex-wrap items-center gap-2">
           {dl?.download_url && (
             <a href={dl.download_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90">
-              <Download className="h-4 w-4" />Télécharger V{dl.version_number} · {linkHost(dl.download_url)}
+              <Download className="h-4 w-4" />Projet V{dl.version_number} · {linkHost(dl.download_url)}
             </a>
           )}
-          {uid && !isOwner && <StemRequestButton projectId={id} uid={uid} />}
+          {stems?.stems_url && (
+            <a href={stems.stems_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-lg bg-secondary px-4 py-2.5 text-sm font-semibold hover:bg-accent">
+              <Layers className="h-4 w-4 text-primary" />STEMS V{stems.version_number} · {linkHost(stems.stems_url)}
+            </a>
+          )}
+          {uid && !isOwner && !stems && <StemRequestButton projectId={id} uid={uid} versionId={latest?.id ?? null} />}
           {uid && <NewVersionDialog projectId={id} uid={uid} trigger={<Button variant="secondary"><Plus className="h-4 w-4" />Nouvelle version</Button>} />}
           {isOwner && (
             <ConfirmDelete title="Supprimer ce projet ?" description="Versions, covers, discussion et demandes de STEMS seront supprimés définitivement." onConfirm={async () => {
@@ -185,7 +191,12 @@ function ProjectPage() {
                   {v.notes && <p className="mt-3 text-sm text-foreground/80">{v.notes}</p>}
                   {v.download_url && (
                     <a href={v.download_url} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-2 rounded-lg bg-secondary px-3 py-1.5 text-xs font-medium hover:bg-accent">
-                      <Download className="h-3.5 w-3.5" />Télécharger V{v.version_number} · {linkHost(v.download_url)}
+                      <Download className="h-3.5 w-3.5" />Projet V{v.version_number} · {linkHost(v.download_url)}
+                    </a>
+                  )}
+                  {v.stems_url && (
+                    <a href={v.stems_url} target="_blank" rel="noreferrer" className="mt-3 ml-2 inline-flex items-center gap-2 rounded-lg bg-primary/15 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/20">
+                      <Layers className="h-3.5 w-3.5" />STEMS V{v.version_number} · {linkHost(v.stems_url)}
                     </a>
                   )}
                 </div>
@@ -199,7 +210,7 @@ function ProjectPage() {
   );
 }
 
-function StemRequestButton({ projectId, uid }: { projectId: string; uid: string }) {
+function StemRequestButton({ projectId, uid, versionId }: { projectId: string; uid: string; versionId: string | null }) {
   const qc = useQueryClient();
   const key = ["my-stem", projectId];
   const { data } = useQuery({
@@ -222,7 +233,7 @@ function StemRequestButton({ projectId, uid }: { projectId: string; uid: string 
         <Textarea value={msg} onChange={(e) => setMsg(e.target.value)} placeholder="Explique ce que tu veux en faire (remix, édit, collab…)" rows={4} />
         <Button
           onClick={async () => {
-            const { error } = await supabase.from("stem_requests").insert({ project_id: projectId, requester_id: uid, message: msg || null });
+            const { error } = await supabase.from("stem_requests").insert({ project_id: projectId, requester_id: uid, version_id: versionId, message: msg.trim() || null });
             if (error) { toast.error("Demande impossible"); return; }
             toast.success("Demande envoyée");
             setOpen(false);
