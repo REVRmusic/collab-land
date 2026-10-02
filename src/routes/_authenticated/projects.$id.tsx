@@ -5,7 +5,7 @@ import { Download, GitBranch, ImagePlus, Layers, Lock, MessageCircle, Palette, P
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useMe } from "@/hooks/use-me";
-import { extOf, timeAgo, uploadFile } from "@/lib/media";
+import { compressImage, extOf, timeAgo, uploadFile } from "@/lib/media";
 import { CoverImage, UserAvatar } from "@/components/UserAvatar";
 import { TrackPlayer } from "@/components/TrackPlayer";
 import { Discussion } from "@/components/project/Discussion";
