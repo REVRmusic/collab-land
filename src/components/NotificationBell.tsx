@@ -102,17 +102,18 @@ export function NotificationBell({ uid }: { uid?: string | undefined }) {
           )}
         </button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-[360px] max-w-[92vw] p-2">
+      <PopoverContent align="end" className="w-[min(380px,calc(100vw-1rem))] p-2">
         <div className="flex items-center justify-between px-2 py-1">
           <h3 className="font-display font-semibold">Notifications</h3>
           {unread > 0 && <button onClick={markAll} className="text-xs text-primary">Tout marquer lu</button>}
         </div>
-        <div className="max-h-[60vh] overflow-y-auto">
+        <div className="max-h-[65vh] overflow-y-auto">
           {items.length === 0 && <p className="p-6 text-center text-sm text-muted-foreground">Rien de neuf pour l'instant.</p>}
           {items.map((n) => (
             <NotifLink key={n.id} n={n}><NotifRow n={n} /></NotifLink>
           ))}
         </div>
+        <Link to="/notifications" className="mt-1 block rounded-lg py-2 text-center text-sm font-medium text-primary hover:bg-accent">Tout voir</Link>
       </PopoverContent>
     </Popover>
   );
