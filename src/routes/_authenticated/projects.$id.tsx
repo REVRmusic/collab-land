@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Download, GitBranch, ImagePlus, Layers, LifeBuoy, Lock, MessageCircle, Palette, Plus, Star, Trash2, Users } from "lucide-react";
-import { linkHost } from "@/lib/links";
+import { linkHost, cleanLink } from "@/lib/links";
 import { EditProjectDialog, EditVersionDialog } from "@/components/project/EditProjectDialog";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -72,8 +73,6 @@ function ProjectPage() {
   const p = project.data;
   if (!p) return <p className="text-muted-foreground">Ce projet n'existe pas ou ne t'est pas partagé.</p>;
   const latest = versions.data?.[0];
-  const dl = versions.data?.find((v) => v.download_url);
-  const stems = versions.data?.find((v) => v.stems_url);
   const isOwner = uid === p.owner_id;
 
   return (
@@ -108,17 +107,19 @@ function ProjectPage() {
           </div>
         </div>
         <div className="mt-5 flex flex-wrap items-center gap-2">
-          {dl?.download_url && (
-            <a href={dl.download_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90">
-              <Download className="h-4 w-4" />Projet V{dl.version_number} · {linkHost(dl.download_url)}
+          {latest?.download_url && (
+            <a href={latest.download_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90">
+              <Download className="h-4 w-4" />Projet V{latest.version_number} · {linkHost(latest.download_url)}
             </a>
           )}
-          {stems?.stems_url && (
-            <a href={stems.stems_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-lg bg-secondary px-4 py-2.5 text-sm font-semibold hover:bg-accent">
-              <Layers className="h-4 w-4 text-primary" />STEMS V{stems.version_number} · {linkHost(stems.stems_url)}
+          {latest?.stems_url && (
+            <a href={latest.stems_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-lg bg-secondary px-4 py-2.5 text-sm font-semibold hover:bg-accent">
+              <Layers className="h-4 w-4 text-primary" />STEMS V{latest.version_number} · {linkHost(latest.stems_url)}
             </a>
           )}
-          {uid && !isOwner && !stems && <StemRequestButton projectId={id} uid={uid} versionId={latest?.id ?? null} />}
+          {uid && !isOwner && latest && !latest.stems_url && (
+            <StemRequestButton projectId={id} uid={uid} versionId={latest.id} versionNumber={latest.version_number} />
+          )}
           {uid && <NewVersionDialog projectId={id} uid={uid} trigger={<Button variant="secondary"><Plus className="h-4 w-4" />Nouvelle version</Button>} />}
           {isOwner && (
             <ConfirmDelete title="Supprimer ce projet ?" description="Versions, covers, discussion et demandes de STEMS seront supprimés définitivement." onConfirm={async () => {
@@ -142,7 +143,7 @@ function ProjectPage() {
         </div>
       </section>
 
-      {isOwner && <StemRequests projectId={id} />}
+      {isOwner && <StemRequests projectId={id} versions={versions.data ?? []} />}
 
       <Tabs defaultValue="discussion" className="mt-6">
         <TabsList className="w-full justify-start sm:w-auto">
@@ -210,7 +211,7 @@ function ProjectPage() {
   );
 }
 
-function StemRequestButton({ projectId, uid, versionId }: { projectId: string; uid: string; versionId: string | null }) {
+function StemRequestButton({ projectId, uid, versionId, versionNumber }: { projectId: string; uid: string; versionId: string; versionNumber: number }) {
   const qc = useQueryClient();
   const key = ["my-stem", projectId];
   const { data } = useQuery({
@@ -229,7 +230,7 @@ function StemRequestButton({ projectId, uid, versionId }: { projectId: string; u
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild><Button><Layers className="h-4 w-4" />Demander les STEMS</Button></DialogTrigger>
       <DialogContent>
-        <DialogHeader><DialogTitle>Demander les STEMS</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>Demander les STEMS de la V{versionNumber}</DialogTitle></DialogHeader>
         <Textarea value={msg} onChange={(e) => setMsg(e.target.value)} placeholder="Explique ce que tu veux en faire (remix, édit, collab…)" rows={4} />
         <Button
           onClick={async () => {
@@ -247,46 +248,117 @@ function StemRequestButton({ projectId, uid, versionId }: { projectId: string; u
   );
 }
 
-function StemRequests({ projectId }: { projectId: string }) {
+type VersionLite = { id: string; version_number: number; stems_url: string | null };
+
+function StemRequests({ projectId, versions }: { projectId: string; versions: VersionLite[] }) {
   const qc = useQueryClient();
+  const [share, setShare] = useState<{ versionId: string; versionNumber: number; stemsUrl: string | null } | null>(null);
+  const [stemsLink, setStemsLink] = useState("");
+  const [busy, setBusy] = useState(false);
   const { data } = useQuery({
     queryKey: ["stems", projectId],
     queryFn: async () => {
       const { data } = await supabase
         .from("stem_requests")
-        .select("id,status,message,created_at,requester:profiles!stem_requests_requester_id_fkey(id,username,display_name,avatar_url)")
+        .select("id,status,message,created_at,version_id,requester:profiles!stem_requests_requester_id_fkey(id,username,display_name,avatar_url)")
         .eq("project_id", projectId)
         .order("created_at", { ascending: false });
-      return (data ?? []) as unknown as { id: string; status: string; message: string | null; created_at: string; requester: Prof }[];
+      return (data ?? []) as unknown as { id: string; status: string; message: string | null; created_at: string; version_id: string | null; requester: Prof }[];
     },
   });
   const pending = (data ?? []).filter((r) => r.status === "pending");
-  if (!pending.length) return null;
-  const answer = async (rid: string, status: "accepted" | "declined") => {
-    const { error } = await supabase.from("stem_requests").update({ status }).eq("id", rid);
+  if (!pending.length && !share) return null;
+
+  const versionLabel = (versionId: string | null) => {
+    const v = versions.find((x) => x.id === versionId) ?? versions[0];
+    return v ? `V${v.version_number}` : null;
+  };
+
+  const openShareFor = (versionId: string | null) => {
+    const v = versions.find((x) => x.id === versionId) ?? versions[0];
+    if (!v) { toast.success("Demande acceptée"); return; }
+    setStemsLink(v.stems_url ?? "");
+    setShare({ versionId: v.id, versionNumber: v.version_number, stemsUrl: v.stems_url });
+  };
+
+  const answer = async (r: { id: string; version_id: string | null }, status: "accepted" | "declined") => {
+    const { error } = await supabase.from("stem_requests").update({ status }).eq("id", r.id);
     if (error) { toast.error("Mise à jour impossible"); return; }
     qc.invalidateQueries({ queryKey: ["stems", projectId] });
-    toast.success(status === "accepted" ? "Demande acceptée — partage le lien des stems dans la discussion" : "Demande refusée");
+    if (status === "accepted") openShareFor(r.version_id);
+    else toast.success("Demande refusée");
   };
+
+  const saveStems = async () => {
+    if (!share) return;
+    let stems_url: string | null;
+    try {
+      stems_url = cleanLink(stemsLink);
+    } catch (e) { toast.error((e as Error).message); return; }
+    if (!stems_url) { toast.error("Colle un lien https:// pour les STEMS"); return; }
+    setBusy(true);
+    const { error } = await supabase.from("project_versions").update({ stems_url }).eq("id", share.versionId);
+    setBusy(false);
+    if (error) { toast.error("Enregistrement du lien impossible"); return; }
+    toast.success(`Lien STEMS ajouté sur la V${share.versionNumber}`);
+    setShare(null);
+    setStemsLink("");
+    qc.invalidateQueries({ queryKey: ["versions", projectId] });
+    qc.invalidateQueries({ queryKey: ["project", projectId] });
+  };
+
   return (
-    <section className="mt-4 rounded-2xl border border-primary/30 bg-primary/5 p-4">
-      <h2 className="flex items-center gap-2 font-semibold"><Layers className="h-4 w-4 text-primary" />Demandes de STEMS</h2>
-      <div className="mt-3 space-y-2">
-        {pending.map((r) => (
-          <div key={r.id} className="flex flex-col gap-3 rounded-xl bg-card p-3 sm:flex-row sm:items-center">
-            <UserAvatar profile={r.requester} className="h-9 w-9" />
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium">{r.requester.display_name || r.requester.username}</p>
-              {r.message && <p className="text-sm text-muted-foreground">{r.message}</p>}
-            </div>
-            <div className="flex gap-2">
-              <Button size="sm" onClick={() => answer(r.id, "accepted")}>Accepter</Button>
-              <Button size="sm" variant="secondary" onClick={() => answer(r.id, "declined")}>Refuser</Button>
-            </div>
+    <>
+      {pending.length > 0 && (
+        <section className="mt-4 rounded-2xl border border-primary/30 bg-primary/5 p-4">
+          <h2 className="flex items-center gap-2 font-semibold"><Layers className="h-4 w-4 text-primary" />Demandes de STEMS</h2>
+          <div className="mt-3 space-y-2">
+            {pending.map((r) => (
+              <div key={r.id} className="flex flex-col gap-3 rounded-xl bg-card p-3 sm:flex-row sm:items-center">
+                <UserAvatar profile={r.requester} className="h-9 w-9" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium">
+                    {r.requester.display_name || r.requester.username}
+                    {versionLabel(r.version_id) && <span className="ml-2 text-muted-foreground">· {versionLabel(r.version_id)}</span>}
+                  </p>
+                  {r.message && <p className="text-sm text-muted-foreground">{r.message}</p>}
+                </div>
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={() => answer(r, "accepted")}>Accepter</Button>
+                  <Button size="sm" variant="secondary" onClick={() => answer(r, "declined")}>Refuser</Button>
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
-    </section>
+        </section>
+      )}
+
+      <Dialog open={!!share} onOpenChange={(o) => { if (!o) setShare(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Partager les STEMS de la V{share?.versionNumber}</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            La demande est acceptée. Colle le lien des stems pour cette version : il sera visible pour les collaborateurs.
+          </p>
+          <div className="space-y-1.5">
+            <Label>Lien des STEMS</Label>
+            <Input
+              type="url"
+              value={stemsLink}
+              onChange={(e) => setStemsLink(e.target.value)}
+              placeholder="WeTransfer, SwissTransfer, Drive, Dropbox, iCloud…"
+              maxLength={2000}
+              autoFocus
+            />
+          </div>
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button variant="ghost" onClick={() => setShare(null)}>Plus tard</Button>
+            <Button disabled={busy} onClick={saveStems}>{busy ? "Enregistrement…" : "Publier le lien"}</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
