@@ -12,6 +12,9 @@ type Props = {
   playedVar?: string;
   restVar?: string;
   className?: string;
+  /** Markers as ratios 0..1 along the waveform */
+  markers?: { id: string; ratio: number; active?: boolean }[];
+  onMarkerClick?: (id: string) => void;
 };
 
 function cssVar(el: Element, name: string) {
@@ -29,6 +32,8 @@ export function Waveform({
   playedVar = "--wave-played",
   restVar = "--wave",
   className,
+  markers,
+  onMarkerClick,
 }: Props) {
   const wrap = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -75,7 +80,6 @@ export function Waveform({
         const top = height * 0.68;
         const h = Math.max(2, p * (top - 2));
         ctx.fillRect(x, top - h, bw, h);
-        // reflection
         ctx.globalAlpha = (isPlayed ? 0.45 : 0.25) * (isHover ? 1.4 : 1);
         const rh = Math.max(1, p * (height - top - 1));
         ctx.fillRect(x, top + 1, bw, rh);
@@ -109,6 +113,23 @@ export function Waveform({
       }}
     >
       <canvas ref={canvas} style={{ width: "100%", height }} className="block" />
+      {markers?.map((m) => (
+        <button
+          key={m.id}
+          type="button"
+          aria-label="Annotation"
+          className={`absolute top-0 z-10 h-full w-3 -translate-x-1/2 ${m.active ? "opacity-100" : "opacity-80 hover:opacity-100"}`}
+          style={{ left: `${Math.min(100, Math.max(0, m.ratio * 100))}%` }}
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            onMarkerClick?.(m.id);
+          }}
+        >
+          <span className={`absolute left-1/2 top-[8%] h-2.5 w-2.5 -translate-x-1/2 rounded-full ring-2 ring-background ${m.active ? "bg-primary" : "bg-voice"}`} />
+          <span className={`absolute left-1/2 top-[8%] h-[60%] w-px -translate-x-1/2 ${m.active ? "bg-primary/70" : "bg-voice/50"}`} />
+        </button>
+      ))}
     </div>
   );
 }

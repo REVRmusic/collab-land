@@ -78,6 +78,13 @@
       "when": 1790976415868,
       "tag": "0010_validate_stem_request_version",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1790980000000,
+      "tag": "0011_version_markers",
+      "breakpoints": true
     }
   ]
 }

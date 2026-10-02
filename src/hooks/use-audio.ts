@@ -63,6 +63,22 @@ export function useAudio(url?: string, knownDuration?: number | null) {
     [ensure, duration],
   );
 
+  const seekTo = useCallback(
+    (sec: number) => {
+      const a = ensure();
+      if (!a) return;
+      const d = isFinite(a.duration) && a.duration ? a.duration : duration;
+      a.currentTime = d ? Math.min(Math.max(0, sec), d) : Math.max(0, sec);
+      setTime(a.currentTime);
+      if (a.paused) {
+        if (current && current !== a) current.pause();
+        current = a;
+        a.play().catch(() => {});
+      }
+    },
+    [ensure, duration],
+  );
+
   const setRate = useCallback(
     (r: number) => {
       const a = ensure();
@@ -72,5 +88,5 @@ export function useAudio(url?: string, knownDuration?: number | null) {
     [ensure],
   );
 
-  return { playing, time, duration, progress: duration ? time / duration : 0, toggle, seek, rate, setRate, ready: !!url };
+  return { playing, time, duration, progress: duration ? time / duration : 0, toggle, seek, seekTo, rate, setRate, ready: !!url };
 }

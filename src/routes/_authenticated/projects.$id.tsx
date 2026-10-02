@@ -102,7 +102,7 @@ function ProjectPage() {
             )}
             {p.description && <p className="mt-3 max-w-2xl text-sm text-foreground/80">{p.description}</p>}
             <div className="mt-auto pt-5">
-              {latest && <TrackPlayer path={latest.audio_url} peaks={latest.peaks} duration={latest.duration} height={84} />}
+              {latest && <TrackPlayer path={latest.audio_url} peaks={latest.peaks} duration={latest.duration} height={84} versionId={latest.id} projectId={id} />}
             </div>
           </div>
         </div>
@@ -188,7 +188,7 @@ function ProjectPage() {
                       </ConfirmDelete>
                     )}
                   </div>
-                  <TrackPlayer path={v.audio_url} peaks={v.peaks} duration={v.duration} size="sm" height={60} />
+                  <TrackPlayer path={v.audio_url} peaks={v.peaks} duration={v.duration} size="sm" height={60} versionId={v.id} projectId={id} />
                   {v.notes && <p className="mt-3 text-sm text-foreground/80">{v.notes}</p>}
                   {v.download_url && (
                     <a href={v.download_url} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-2 rounded-lg bg-secondary px-3 py-1.5 text-xs font-medium hover:bg-accent">
