@@ -200,6 +200,11 @@ export function Discussion({ projectId, uid, projectTitle, mobileOpen, onMobileC
     gestureLocked.current = false;
   }, []);
 
+  const closeMobileDiscussion = () => {
+    if (recording) setFinishAction("cancel");
+    onMobileClose();
+  };
+
   const startVoiceGesture = (e: React.PointerEvent<HTMLButtonElement>) => {
     if (sending) return;
     e.preventDefault();
@@ -255,7 +260,7 @@ export function Discussion({ projectId, uid, projectTitle, mobileOpen, onMobileC
   return (
     <div className={`${mobileOpen ? "fixed inset-0 z-50 flex h-[100dvh]" : "hidden"} flex-col overflow-hidden bg-card md:flex md:h-[70vh] md:min-h-[480px] md:rounded-2xl md:border md:border-border`}>
       <div className="grid h-14 shrink-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-b border-border px-3 md:hidden">
-        <button type="button" onClick={onMobileClose} className="grid h-10 w-10 place-items-center rounded-full hover:bg-accent" aria-label="Retour au projet">
+        <button type="button" onClick={closeMobileDiscussion} className="grid h-10 w-10 place-items-center rounded-full hover:bg-accent" aria-label="Retour au projet">
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div className="min-w-0 text-center">

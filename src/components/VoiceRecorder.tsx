@@ -70,7 +70,10 @@ export function VoiceRecorder({
     })();
     return () => {
       cancelAnimationFrame(raf);
-      if (rec.current?.state === "recording") rec.current.stop();
+      if (rec.current?.state === "recording") {
+        cancelled.current = true;
+        rec.current.stop();
+      }
       stream?.getTracks().forEach((t) => t.stop());
       ctx?.close();
     };
