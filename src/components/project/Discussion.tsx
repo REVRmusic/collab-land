@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCheck, CornerUpLeft, GitBranch, Mic, Plus, Send, Trash2, X } from "lucide-react";
+import { linkHost } from "@/lib/links";
+import { CheckCheck, Download, CornerUpLeft, GitBranch, Mic, Plus, Send, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { computePeaks, extOf, removeFiles, timeAgo, uploadFile } from "@/lib/media";
@@ -23,7 +24,7 @@ type Msg = {
   reply_to_id: string | null;
   created_at: string;
   author: Author;
-  version: { version_number: number; title: string | null; audio_url: string; peaks: number[] | null; duration: number | null } | null;
+  version: { version_number: number; title: string | null; download_url: string | null; audio_url: string; peaks: number[] | null; duration: number | null } | null;
 };
 
 function preview(m?: Msg) {
@@ -47,7 +48,7 @@ export function Discussion({ projectId, uid }: { projectId: string; uid: string 
     queryFn: async () => {
       const { data, error } = await supabase
         .from("messages")
-        .select("id,kind,body,audio_url,peaks,duration,reply_to_id,created_at,author:profiles!messages_author_id_fkey(id,username,display_name,avatar_url),version:project_versions(version_number,title,audio_url,peaks,duration)")
+        .select("id,kind,body,audio_url,peaks,duration,reply_to_id,created_at,author:profiles!messages_author_id_fkey(id,username,display_name,avatar_url),version:project_versions(version_number,title,download_url,audio_url,peaks,duration)")
         .eq("project_id", projectId)
         .order("created_at", { ascending: true })
         .limit(300);
@@ -321,6 +322,11 @@ function Bubble({ m, mine }: { m: Msg; mine: boolean }) {
         </p>
         <TrackPlayer path={m.version.audio_url} peaks={m.version.peaks} duration={m.version.duration} size="sm" height={44} />
         {m.body && <p className="mt-2 text-sm text-foreground/80">{m.body}</p>}
+        {m.version.download_url && (
+          <a href={m.version.download_url} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-secondary px-3 py-1.5 text-xs font-medium hover:bg-accent">
+            <Download className="h-3.5 w-3.5" />Télécharger · {linkHost(m.version.download_url)}
+          </a>
+        )}
       </div>
     );
   }

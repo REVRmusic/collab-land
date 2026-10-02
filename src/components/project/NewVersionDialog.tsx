@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Waveform } from "@/components/Waveform";
+import { cleanLink } from "@/lib/links";
 
 export function NewVersionDialog({ projectId, uid, trigger }: { projectId: string; uid: string; trigger: React.ReactNode }) {
   const qc = useQueryClient();
@@ -19,6 +20,7 @@ export function NewVersionDialog({ projectId, uid, trigger }: { projectId: strin
   const [wave, setWave] = useState<{ peaks: number[]; duration: number } | null>(null);
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
+  const [link, setLink] = useState("");
   const [busy, setBusy] = useState(false);
 
   const pick = async (f?: File) => {
@@ -29,13 +31,15 @@ export function NewVersionDialog({ projectId, uid, trigger }: { projectId: strin
 
   const submit = async () => {
     if (!file) { toast.error("Ajoute un fichier audio"); return; }
+    let download_url: string | null;
+    try { download_url = cleanLink(link); } catch (e) { toast.error((e as Error).message); return; }
     setBusy(true);
     try {
       const w = wave ?? (await computePeaks(file));
       const path = await compressAudio(file, (p) => toast.loading(`Compression… ${p} %`, { id: "compress" })).then((c) => { toast.dismiss("compress"); return uploadFile("audio", c.blob, c.ext); });
       const { data: v, error } = await supabase
         .from("project_versions")
-        .insert({ project_id: projectId, author_id: uid, title: title || null, notes: notes || null, audio_url: path, peaks: w.peaks, duration: w.duration })
+        .insert({ project_id: projectId, author_id: uid, title: title || null, notes: notes || null, audio_url: path, peaks: w.peaks, duration: w.duration, download_url })
         .select("id")
         .single();
       if (error) throw error;
@@ -49,6 +53,7 @@ export function NewVersionDialog({ projectId, uid, trigger }: { projectId: strin
       setWave(null);
       setTitle("");
       setNotes("");
+      setLink("");
     } catch (e) {
       toast.dismiss("compress");
       toast.error((e as Error).message);
@@ -75,6 +80,7 @@ export function NewVersionDialog({ projectId, uid, trigger }: { projectId: strin
         </label>
         <div className="space-y-1.5"><Label>Titre (optionnel)</Label><Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Nouveau drop, mix plus large…" /></div>
         <div className="space-y-1.5"><Label>Notes</Label><Textarea rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Ce qui a changé…" /></div>
+        <div className="space-y-1.5"><Label>Lien de téléchargement (optionnel)</Label><Input type="url" value={link} onChange={(e) => setLink(e.target.value)} placeholder="WeTransfer, SwissTransfer, Drive, Dropbox, iCloud…" /></div>
         <Button onClick={submit} disabled={busy}>{busy ? "Envoi…" : "Publier"}</Button>
       </DialogContent>
     </Dialog>

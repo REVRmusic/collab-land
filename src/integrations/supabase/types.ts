@@ -328,6 +328,7 @@ export type Database = {
           audio_url: string
           author_id: string
           created_at: string
+          download_url: string | null
           duration: number | null
           id: string
           notes: string | null
@@ -340,6 +341,7 @@ export type Database = {
           audio_url: string
           author_id: string
           created_at?: string
+          download_url?: string | null
           duration?: number | null
           id?: string
           notes?: string | null
@@ -352,6 +354,7 @@ export type Database = {
           audio_url?: string
           author_id?: string
           created_at?: string
+          download_url?: string | null
           duration?: number | null
           id?: string
           notes?: string | null

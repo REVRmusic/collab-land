@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { cleanLink } from "@/lib/links";
 
 type P = {
   id: string; title: string; genre: string | null; bpm: number | null; musical_key: string | null;
@@ -21,7 +22,7 @@ export function EditProjectDialog({ project, uid, memberIds, onSaved }: { projec
   const [open, setOpen] = useState(false);
   const init = () => ({
     title: project.title, genre: project.genre ?? "", bpm: project.bpm?.toString() ?? "", musical_key: project.musical_key ?? "",
-    description: project.description ?? "", help_needed: project.help_needed ?? "", download_url: project.download_url ?? "",
+    description: project.description ?? "", help_needed: project.help_needed ?? "",
   });
   const [f, setF] = useState(init);
   const [visibility, setVisibility] = useState(project.visibility as "friends" | "selected");
@@ -34,7 +35,7 @@ export function EditProjectDialog({ project, uid, memberIds, onSaved }: { projec
     setBusy(true);
     const { error } = await supabase.from("projects").update({
       title: f.title.trim(), genre: f.genre || null, bpm: f.bpm ? parseInt(f.bpm) : null, musical_key: f.musical_key || null,
-      description: f.description || null, help_needed: f.help_needed.trim() || null, download_url: f.download_url || null,
+      description: f.description || null, help_needed: f.help_needed.trim() || null,
       visibility, updated_at: new Date().toISOString(),
     }).eq("id", project.id);
     if (error) { setBusy(false); toast.error("Enregistrement impossible"); return; }
@@ -63,7 +64,6 @@ export function EditProjectDialog({ project, uid, memberIds, onSaved }: { projec
           </div>
           <div className="space-y-1.5"><Label>Besoin d'aide sur… (optionnel)</Label><Input value={f.help_needed} onChange={(e) => setF({ ...f, help_needed: e.target.value })} placeholder="Besoin d'un drop plus impactant" /></div>
           <div className="space-y-1.5"><Label>Description</Label><Textarea rows={3} value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} /></div>
-          <div className="space-y-1.5"><Label>Lien de téléchargement</Label><Input type="url" value={f.download_url} onChange={(e) => setF({ ...f, download_url: e.target.value })} placeholder="https://wetransfer.com/…" /></div>
           <div className="space-y-2">
             <Label>Qui peut voir ce projet ?</Label>
             <div className="grid grid-cols-2 gap-2">
@@ -94,12 +94,13 @@ export function EditProjectDialog({ project, uid, memberIds, onSaved }: { projec
   );
 }
 
-export function EditVersionDialog({ version, onSaved }: { version: { id: string; version_number: number; title: string | null; notes: string | null }; onSaved: () => void }) {
+export function EditVersionDialog({ version, onSaved }: { version: { id: string; version_number: number; title: string | null; notes: string | null; download_url: string | null }; onSaved: () => void }) {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
+  const [link, setLink] = useState("");
   return (
-    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (o) { setTitle(version.title ?? ""); setNotes(version.notes ?? ""); } }}>
+    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (o) { setTitle(version.title ?? ""); setNotes(version.notes ?? ""); setLink(version.download_url ?? ""); } }}>
       <DialogTrigger asChild>
         <button className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground hover:bg-accent hover:text-foreground" aria-label={`Modifier la V${version.version_number}`}><Pencil className="h-4 w-4" /></button>
       </DialogTrigger>
@@ -107,8 +108,11 @@ export function EditVersionDialog({ version, onSaved }: { version: { id: string;
         <DialogHeader><DialogTitle>Modifier la V{version.version_number}</DialogTitle></DialogHeader>
         <div className="space-y-1.5"><Label>Titre</Label><Input value={title} onChange={(e) => setTitle(e.target.value)} /></div>
         <div className="space-y-1.5"><Label>Notes</Label><Textarea rows={4} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Ce qui a changé…" /></div>
+        <div className="space-y-1.5"><Label>Lien de téléchargement</Label><Input type="url" value={link} onChange={(e) => setLink(e.target.value)} placeholder="https://wetransfer.com/…" /></div>
         <Button onClick={async () => {
-          const { error } = await supabase.from("project_versions").update({ title: title || null, notes: notes || null }).eq("id", version.id);
+          let download_url: string | null;
+          try { download_url = cleanLink(link); } catch (e) { toast.error((e as Error).message); return; }
+          const { error } = await supabase.from("project_versions").update({ title: title || null, notes: notes || null, download_url }).eq("id", version.id);
           if (error) { toast.error("Enregistrement impossible"); return; }
           toast.success("Version mise à jour");
           setOpen(false);
