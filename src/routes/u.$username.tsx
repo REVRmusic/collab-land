@@ -115,7 +115,13 @@ function ProfilePage() {
     }
   };
 
-  const shown = projects.data ?? [];
+  const shown = (() => {
+    const list = projects.data ?? [];
+    if (!isMe) return list;
+    // Public showcase projects first so the owner sees what visitors get
+    return [...list].sort((a, b) => Number(!!b.showcase) - Number(!!a.showcase));
+  })();
+  const publicCount = shown.filter((pr) => pr.showcase).length;
   const emptyPublic = !isMe && shown.length === 0;
 
   return (
@@ -124,7 +130,19 @@ function ProfilePage() {
         <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
           <UserAvatar profile={p} className="h-24 w-24 sm:h-28 sm:w-28" />
           <div className="min-w-0 flex-1">
-            <h1 className="truncate text-3xl font-bold">{p.display_name || p.username}</h1>
+            <div className="flex min-w-0 items-center gap-2">
+              <h1 className="truncate text-3xl font-bold">{p.display_name || p.username}</h1>
+              {isMe && (
+                <Link
+                  to="/settings"
+                  aria-label="Paramètres"
+                  title="Paramètres"
+                  className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition hover:bg-accent hover:text-foreground"
+                >
+                  <Settings className="h-4 w-4" />
+                </Link>
+              )}
+            </div>
             <p className="text-muted-foreground">@{p.username}</p>
             {p.bio && <p className="mt-2 max-w-xl text-sm text-foreground/80">{p.bio}</p>}
           </div>
@@ -133,10 +151,7 @@ function ProfilePage() {
               <Share2 className="h-4 w-4" />Partager
             </Button>
             {isMe ? (
-              <>
-                <Link to="/settings" className="inline-flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm"><Settings className="h-4 w-4" />Modifier</Link>
-                <Link to="/projects/new" className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground"><Plus className="h-4 w-4" />Projet</Link>
-              </>
+              <Link to="/projects/new" className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground"><Plus className="h-4 w-4" />Projet</Link>
             ) : (
               uid && <FriendButton me={uid} other={p.id} />
             )}
@@ -153,7 +168,9 @@ function ProfilePage() {
           <h2 className="text-xl font-bold">Vitrine</h2>
           <p className="text-sm text-muted-foreground">
             {isMe
-              ? "Coche « Sur ma vitrine publique » dans Modifier pour exposer un projet ici."
+              ? publicCount > 0
+                ? `${publicCount} projet${publicCount > 1 ? "s" : ""} visible${publicCount > 1 ? "s" : ""} sur ton profil public. Bascule Public / Masqué sur chaque carte.`
+                : "Aucun projet n’est encore visible publiquement — passe un projet en Public sur sa carte."
               : "Extraits des projets mis en avant."}
           </p>
         </div>
@@ -175,7 +192,7 @@ function ProfilePage() {
             Publie ton premier projet pour remplir ta vitrine.
           </p>
         )}
-        {shown.map((pr) => <ProjectCard key={pr.id} p={pr} />)}
+        {shown.map((pr) => <ProjectCard key={pr.id} p={pr} showPublicVisibility={isMe} />)}
       </div>
     </div>
   );

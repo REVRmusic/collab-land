@@ -1,8 +1,13 @@
+import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { GitBranch, LifeBuoy, Lock } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { Eye, EyeOff, GitBranch, LifeBuoy, Lock } from "lucide-react";
+import { toast } from "sonner";
 import { CoverImage, UserAvatar } from "./UserAvatar";
 import { TrackPlayer } from "./TrackPlayer";
 import { timeAgo } from "@/lib/media";
+import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
 
 export type ProjectRow = {
   id: string;
@@ -26,7 +31,74 @@ export function latestVersion(p: ProjectRow) {
   return [...(p.project_versions ?? [])].sort((a, b) => b.version_number - a.version_number)[0];
 }
 
-export function ProjectCard({ p }: { p: ProjectRow }) {
+function ShowcaseToggle({ projectId, value }: { projectId: string; value: boolean }) {
+  const qc = useQueryClient();
+  const [on, setOn] = useState(value);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    setOn(value);
+  }, [value]);
+
+  const toggle = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (busy) return;
+    const next = !on;
+    setOn(next);
+    setBusy(true);
+    const { error } = await supabase
+      .from("projects")
+      .update({ showcase: next, updated_at: new Date().toISOString() })
+      .eq("id", projectId);
+    setBusy(false);
+    if (error) {
+      setOn(!next);
+      toast.error("Impossible de modifier la visibilité");
+      return;
+    }
+    toast.success(next ? "Visible sur ton profil public" : "Masqué du profil public");
+    qc.invalidateQueries({ queryKey: ["user-projects"] });
+  };
+
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={on}
+      aria-label={on ? "Masquer du profil public" : "Rendre visible sur le profil public"}
+      disabled={busy}
+      onClick={toggle}
+      className={cn(
+        "relative inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full p-1 text-[11px] font-semibold tracking-wide transition-all",
+        "ring-1 ring-inset focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+        on
+          ? "bg-primary text-primary-foreground ring-primary/40 shadow-[0_0_20px_-8px] shadow-primary"
+          : "bg-secondary/80 text-muted-foreground ring-border hover:bg-secondary hover:text-foreground",
+        busy && "opacity-70",
+      )}
+    >
+      <span
+        className={cn(
+          "grid h-6 w-6 place-items-center rounded-full transition-all duration-200",
+          on ? "bg-white/20" : "bg-background/60",
+        )}
+      >
+        {on ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+      </span>
+      <span className="pr-2.5">{on ? "Public" : "Masqué"}</span>
+    </button>
+  );
+}
+
+export function ProjectCard({
+  p,
+  /** On “Ma vitrine”, show a toggle to publish/unpublish on the shared profile. */
+  showPublicVisibility = false,
+}: {
+  p: ProjectRow;
+  showPublicVisibility?: boolean;
+}) {
   const v = latestVersion(p);
   return (
     <article className="group rounded-2xl border border-border bg-card p-3 transition hover:border-primary/30 sm:p-4">
@@ -47,14 +119,25 @@ export function ProjectCard({ p }: { p: ProjectRow }) {
                 <h3 className="mt-1 truncate text-lg font-bold leading-tight group-hover:text-primary sm:text-xl">{p.title}</h3>
               </Link>
             </div>
-            {p.genre && <span className="hidden shrink-0 rounded-full bg-secondary px-3 py-1 text-xs font-medium sm:inline"># {p.genre}</span>}
+            <div className="flex shrink-0 items-center gap-2">
+              {showPublicVisibility ? (
+                <ShowcaseToggle projectId={p.id} value={!!p.showcase} />
+              ) : (
+                p.genre && <span className="hidden rounded-full bg-secondary px-3 py-1 text-xs font-medium sm:inline"># {p.genre}</span>
+              )}
+            </div>
           </div>
           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
             {v && <span className="flex items-center gap-1"><GitBranch className="h-3 w-3" />V{v.version_number}</span>}
             {p.bpm && <span>{p.bpm} BPM</span>}
             {p.musical_key && <span>{p.musical_key}</span>}
             {p.visibility === "selected" && <span className="flex items-center gap-1"><Lock className="h-3 w-3" />Privé</span>}
-            {p.showcase && <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-semibold text-primary">Vitrine</span>}
+            {!showPublicVisibility && p.showcase && (
+              <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-semibold text-primary">Vitrine</span>
+            )}
+            {showPublicVisibility && p.genre && (
+              <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] font-medium"># {p.genre}</span>
+            )}
             <span>{timeAgo(p.updated_at)}</span>
           </div>
           {p.help_needed && (
