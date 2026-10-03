@@ -60,8 +60,8 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-      {/* Top bar */}
-      <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-xl lg:ml-60">
+      {/* Top bar — pt safe-area: en PWA iOS le contenu passe sous l’heure / Dynamic Island */}
+      <header className="sticky top-0 z-30 border-b border-border bg-background/80 pt-[env(safe-area-inset-top)] backdrop-blur-xl lg:ml-60">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4">
           <div className="lg:hidden"><Logo /></div>
           <div className="hidden lg:block" />
