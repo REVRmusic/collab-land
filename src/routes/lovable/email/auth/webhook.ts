@@ -1,19 +1,13 @@
 import * as React from 'react'
 import { createAuthEmailHandler } from '@lovable.dev/email-js'
 import { createFileRoute } from '@tanstack/react-router'
+import { FROM_ADDRESS, SENDER_DOMAIN, SITE_NAME, SITE_URL } from '@/lib/email-config'
 import { SignupEmail } from '@/lib/email-templates/signup'
 import { InviteEmail } from '@/lib/email-templates/invite'
 import { MagicLinkEmail } from '@/lib/email-templates/magic-link'
 import { RecoveryEmail } from '@/lib/email-templates/recovery'
 import { EmailChangeEmail } from '@/lib/email-templates/email-change'
 import { ReauthenticationEmail } from '@/lib/email-templates/reauthentication'
-
-// Configuration
-const SITE_NAME = "CollabLand"
-const SENDER_DOMAIN = "collabland-notify.lm-music.com"
-const ROOT_DOMAIN = "lm-music.com"
-const FROM_DOMAIN = "collabland-notify.lm-music.com"
-const SITE_URL = "https://collab-land.lovable.app"
 
 // The SDK handler owns verification, dispatch, and retry semantics; this file
 // owns only the email decisions: subjects, templates, and per-type props.
@@ -23,19 +17,26 @@ export const Route = createFileRoute("/lovable/email/auth/webhook")({
       POST: ({ request }) => {
         const handler = createAuthEmailHandler({
           apiKey: process.env['LOVABLE_API_KEY']!,
-          from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
+          from: FROM_ADDRESS,
           senderDomain: SENDER_DOMAIN,
           sendUrl: process.env['LOVABLE_SEND_URL'],
           emails: {
             signup: {
               subject: 'Bienvenue sur CollabLand — confirme ton email',
-              render: (data) =>
-                React.createElement(SignupEmail, {
+              render: async (data) => {
+                try {
+                  const { notifyAdminsOfNewSignup } = await import('@/lib/admin-signup-notify.server')
+                  await notifyAdminsOfNewSignup(data.email)
+                } catch (e) {
+                  console.error('[admin-signup-notify]', e)
+                }
+                return React.createElement(SignupEmail, {
                   siteName: SITE_NAME,
                   siteUrl: SITE_URL,
                   recipient: data.email,
                   confirmationUrl: data.url,
-                }),
+                })
+              },
             },
             invite: {
               subject: 'Tu es invité sur CollabLand',
