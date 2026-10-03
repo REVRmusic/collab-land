@@ -61,8 +61,9 @@ function flyTo(el: HTMLElement, target: HTMLElement) {
   const dy = last.top - first.top;
   const sx = last.width / first.width;
   const sy = last.height / first.height;
-  el.style.transition = `transform ${MORPH_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`;
+  el.style.transition = `transform ${MORPH_MS}ms cubic-bezier(0.22, 1, 0.36, 1), border-radius ${MORPH_MS}ms ease`;
   el.style.transform = `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`;
+  el.style.borderRadius = getComputedStyle(target).borderRadius;
 }
 
 /**
