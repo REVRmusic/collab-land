@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import logoAsset from "@/assets/collabland-logo.png.asset.json";
 
-const SESSION_KEY = "cl-splash-v2";
-const HOLD_MS = 720;
-const MORPH_MS = 680;
-const FADE_MS = 220;
-const TARGET_WAIT_MS = 900;
+const SESSION_KEY = "cl-splash-v3";
+const HOLD_MS = 900;
+const MORPH_MS = 720;
+const FADE_MS = 180;
+const TARGET_WAIT_MS = 1200;
 
 type Phase = "idle" | "show" | "morph" | "fade" | "done";
 
@@ -17,63 +17,83 @@ function markSeen() {
   }
 }
 
-function pickVisible(selector: string): HTMLElement | null {
-  const nodes = Array.from(document.querySelectorAll<HTMLElement>(selector));
+function pickVisibleLogo(): HTMLElement | null {
+  const nodes = Array.from(document.querySelectorAll<HTMLElement>("[data-app-logo]"));
   return (
     nodes.find((el) => {
       const r = el.getBoundingClientRect();
-      return r.width >= 8 && r.height >= 8;
+      return r.width >= 24 && r.height >= 16;
     }) ?? null
   );
 }
 
-async function waitForTargets(timeoutMs: number) {
+async function waitForLogo(timeoutMs: number) {
   const start = performance.now();
   while (performance.now() - start < timeoutMs) {
-    const icon = pickVisible("[data-app-logo-icon]");
-    const text = pickVisible("[data-app-logo-text]");
-    if (icon && text) return { icon, text };
+    const el = pickVisibleLogo();
+    if (el) return el;
     await new Promise<void>((r) => requestAnimationFrame(() => r()));
   }
   return null;
 }
 
-function flyTo(el: HTMLElement, target: HTMLElement) {
-  const first = el.getBoundingClientRect();
-  const last = target.getBoundingClientRect();
-  if (first.width < 1 || last.width < 1) return;
+function wait(ms: number) {
+  return new Promise<void>((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
+}
 
-  el.style.position = "fixed";
-  el.style.left = `${first.left}px`;
-  el.style.top = `${first.top}px`;
-  el.style.width = `${first.width}px`;
-  el.style.height = `${first.height}px`;
-  el.style.margin = "0";
-  el.style.zIndex = "2";
-  el.style.transformOrigin = "top left";
-  el.style.willChange = "transform";
-  // Cancel entrance keyframes so transform isn't overridden
-  el.style.animation = "none";
+/** FLIP invert : place en position finale, inverse vers l’état “centre”, puis anime vers l’identité. */
+async function morphMarkToLogo(mark: HTMLElement, target: HTMLElement, duration: number) {
+  const first = mark.getBoundingClientRect();
+  const targetRect = target.getBoundingClientRect();
+  if (first.width < 1 || targetRect.width < 1) return;
 
-  void el.offsetWidth;
+  // Tout en synchrone avant le prochain paint → pas de frame “cassée”
+  mark.classList.remove("cl-splash__mark--brand", "cl-splash__mark--enter");
+  mark.style.animation = "none";
+  mark.style.filter = "none";
+  mark.style.boxShadow = "none";
+  mark.style.position = "fixed";
+  mark.style.left = `${targetRect.left}px`;
+  mark.style.top = `${targetRect.top}px`;
+  mark.style.margin = "0";
+  mark.style.zIndex = "2";
+  mark.style.transformOrigin = "top left";
+  mark.style.willChange = "transform";
+  mark.style.transform = "none";
 
-  const dx = last.left - first.left;
-  const dy = last.top - first.top;
-  const sx = last.width / first.width;
-  const sy = last.height / first.height;
-  el.style.transition = `transform ${MORPH_MS}ms cubic-bezier(0.22, 1, 0.36, 1), border-radius ${MORPH_MS}ms ease`;
-  el.style.transform = `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`;
-  el.style.borderRadius = getComputedStyle(target).borderRadius;
+  void mark.offsetWidth;
+  const last = mark.getBoundingClientRect();
+  if (last.width < 1) return;
+
+  const dx = first.left - last.left;
+  const dy = first.top - last.top;
+  const sx = first.width / last.width;
+  const sy = first.height / last.height;
+  const from = `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`;
+
+  mark.style.transform = from;
+  void mark.offsetWidth;
+
+  const anim = mark.animate(
+    [{ transform: from }, { transform: "translate(0px, 0px) scale(1, 1)" }],
+    {
+      duration,
+      easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+      fill: "forwards",
+    },
+  );
+  await anim.finished.catch(() => undefined);
 }
 
 /**
- * Splash d’ouverture : logo + nom au centre, puis volent
- * vers le Logo réel (header mobile ou sidebar desktop).
+ * Splash : même logo + même typo que l’UI, agrandi au centre puis FLIP
+ * vers le Logo réel (header mobile / sidebar desktop).
  */
 export function AppSplash() {
   const [phase, setPhase] = useState<Phase>("idle");
-  const logoRef = useRef<HTMLImageElement>(null);
-  const wordRef = useRef<HTMLParagraphElement>(null);
+  const markRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -91,11 +111,7 @@ export function AppSplash() {
       return;
     }
 
-    setPhase("show");
-    document.body.classList.add("cl-splash-active");
-
     let cancelled = false;
-    const timers: number[] = [];
 
     const finish = () => {
       if (cancelled) return;
@@ -105,38 +121,44 @@ export function AppSplash() {
     };
 
     const run = async () => {
-      await new Promise<void>((r) => {
-        timers.push(window.setTimeout(r, HOLD_MS));
-      });
+      // Attendre Space Grotesk / DM Sans pour éviter le “saut” de police
+      try {
+        await document.fonts.ready;
+      } catch {
+        /* ignore */
+      }
       if (cancelled) return;
 
-      const targets = await waitForTargets(TARGET_WAIT_MS);
+      setPhase("show");
+      document.body.classList.add("cl-splash-active");
+
+      await wait(HOLD_MS);
       if (cancelled) return;
 
-      if (!targets || !logoRef.current || !wordRef.current) {
+      const target = await waitForLogo(TARGET_WAIT_MS);
+      const mark = markRef.current;
+      if (cancelled) return;
+
+      if (!target || !mark) {
         setPhase("fade");
-        timers.push(window.setTimeout(finish, FADE_MS + 40));
+        await wait(FADE_MS);
+        finish();
         return;
       }
 
       setPhase("morph");
-      flyTo(logoRef.current, targets.icon);
-      flyTo(wordRef.current, targets.text);
-
-      await new Promise<void>((r) => {
-        timers.push(window.setTimeout(r, MORPH_MS));
-      });
+      await morphMarkToLogo(mark, target, MORPH_MS);
       if (cancelled) return;
 
       setPhase("fade");
-      timers.push(window.setTimeout(finish, FADE_MS + 40));
+      await wait(FADE_MS);
+      finish();
     };
 
     void run();
 
     return () => {
       cancelled = true;
-      timers.forEach((t) => window.clearTimeout(t));
       document.body.classList.remove("cl-splash-active");
     };
   }, []);
@@ -156,19 +178,20 @@ export function AppSplash() {
       aria-hidden="true"
     >
       <div className="cl-splash__glow" />
-      <div className="cl-splash__mark">
+      {/* Identique au <Logo /> : flex row, h-8, text-lg, Space Grotesk */}
+      <div
+        ref={markRef}
+        className={`cl-splash__mark cl-splash__mark--brand flex items-center gap-2 ${phase === "show" ? "cl-splash__mark--enter" : ""}`}
+      >
         <img
-          ref={logoRef}
           src={logoAsset.url}
           alt=""
-          width={88}
-          height={88}
-          className="cl-splash__logo"
+          width={32}
+          height={32}
+          className="h-8 w-8 rounded-xl"
           draggable={false}
         />
-        <p ref={wordRef} className="cl-splash__wordmark">
-          CollabLand
-        </p>
+        <span className="font-display text-lg font-bold tracking-tight">CollabLand</span>
       </div>
     </div>
   );
