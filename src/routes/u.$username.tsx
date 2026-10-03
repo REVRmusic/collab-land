@@ -134,19 +134,21 @@ function ProfilePage() {
             <p className="text-muted-foreground">@{p.username}</p>
             {p.bio && <p className="mt-2 max-w-xl text-sm text-foreground/80">{p.bio}</p>}
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Button type="button" variant="secondary" size="sm" onClick={shareLink}>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button type="button" variant="secondary" size="sm" onClick={shareLink} className="h-9">
               <Share2 className="h-4 w-4" />Partager
             </Button>
             {isMe ? (
-              <Link to="/projects/new" className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground"><Plus className="h-4 w-4" />Projet</Link>
+              <Button asChild size="sm" className="h-9">
+                <Link to="/projects/new"><Plus className="h-4 w-4" />Projet</Link>
+              </Button>
             ) : (
               uid && <FriendButton me={uid} other={p.id} />
             )}
             {!uid && (
-              <Link to="/auth" search={{ next: `/u/${p.username}` }} className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground">
-                Rejoindre CollabLand
-              </Link>
+              <Button asChild size="sm" className="h-9">
+                <Link to="/auth" search={{ next: `/u/${p.username}` }}>Rejoindre CollabLand</Link>
+              </Button>
             )}
           </div>
         </div>
