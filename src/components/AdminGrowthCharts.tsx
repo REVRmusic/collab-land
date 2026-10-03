@@ -22,12 +22,14 @@ function GrowthChart({
   description,
   data,
   config,
+  gradientId,
   loading,
 }: {
   title: string;
   description: string;
   data: AdminGrowthPoint[];
   config: ChartConfig;
+  gradientId: string;
   loading?: boolean;
 }) {
   const latest = data.length ? data[data.length - 1]!.total : 0;
@@ -49,9 +51,9 @@ function GrowthChart({
         <ChartContainer config={config} className="mt-3 aspect-[2/1] w-full">
           <AreaChart data={data} margin={{ top: 8, right: 4, left: -18, bottom: 0 }}>
             <defs>
-              <linearGradient id={`fill-${Object.keys(config)[0]}`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={`var(--color-total)`} stopOpacity={0.35} />
-                <stop offset="95%" stopColor={`var(--color-total)`} stopOpacity={0.02} />
+              <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="var(--color-total)" stopOpacity={0.35} />
+                <stop offset="95%" stopColor="var(--color-total)" stopOpacity={0.02} />
               </linearGradient>
             </defs>
             <CartesianGrid vertical={false} strokeDasharray="3 3" />
@@ -62,12 +64,7 @@ function GrowthChart({
               minTickGap={28}
               tickMargin={8}
             />
-            <YAxis
-              tickLine={false}
-              axisLine={false}
-              width={40}
-              allowDecimals={false}
-            />
+            <YAxis tickLine={false} axisLine={false} width={40} allowDecimals={false} />
             <ChartTooltip
               cursor={{ stroke: "var(--color-border)", strokeWidth: 1 }}
               content={
@@ -82,9 +79,9 @@ function GrowthChart({
             <Area
               type="monotone"
               dataKey="total"
-              stroke={`var(--color-total)`}
+              stroke="var(--color-total)"
               strokeWidth={2}
-              fill={`url(#fill-${Object.keys(config)[0]})`}
+              fill={`url(#${gradientId})`}
               isAnimationActive={false}
             />
           </AreaChart>
@@ -115,6 +112,7 @@ export function AdminGrowthCharts({
           description="Nombre total de projets créés dans le temps"
           data={projects}
           config={projectsConfig}
+          gradientId="admin-fill-projects"
           loading={loading}
         />
         <GrowthChart
@@ -122,6 +120,7 @@ export function AdminGrowthCharts({
           description="Nombre total de comptes créés dans le temps"
           data={profiles}
           config={profilesConfig}
+          gradientId="admin-fill-profiles"
           loading={loading}
         />
       </div>
