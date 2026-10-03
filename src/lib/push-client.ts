@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { VAPID_PUBLIC_KEY, urlBase64ToUint8Array } from "@/lib/push-shared";
-import { registerServiceWorker } from "@/lib/pwa";
+import { ensureServiceWorkerRegistration } from "@/lib/pwa";
 
 export type PushSupport = {
   supported: boolean;
@@ -26,8 +26,7 @@ export function pushUnsupportedReason(): string | null {
 }
 
 async function ensureWorker() {
-  registerServiceWorker();
-  return navigator.serviceWorker.ready;
+  return ensureServiceWorkerRegistration();
 }
 
 export async function getPushSubscription(): Promise<PushSubscription | null> {
@@ -39,67 +38,83 @@ export async function getPushSubscription(): Promise<PushSubscription | null> {
 export async function getPushStatus(): Promise<PushSupport> {
   const reason = pushUnsupportedReason();
   if (reason) return { supported: false, permission: "unsupported", subscribed: false };
-  const sub = await getPushSubscription();
-  return {
-    supported: true,
-    permission: Notification.permission,
-    subscribed: !!sub,
-  };
+  try {
+    const sub = await getPushSubscription();
+    return {
+      supported: true,
+      permission: Notification.permission,
+      subscribed: !!sub,
+    };
+  } catch {
+    return {
+      supported: true,
+      permission: Notification.permission,
+      subscribed: false,
+    };
+  }
 }
 
 export async function enablePushNotifications(): Promise<{ ok: boolean; error?: string }> {
   const reason = pushUnsupportedReason();
   if (reason) return { ok: false, error: reason };
 
-  const permission = await Notification.requestPermission();
-  if (permission !== "granted") {
-    return { ok: false, error: "Permission refusée. Tu peux la réactiver dans les réglages du navigateur." };
+  try {
+    const permission = await Notification.requestPermission();
+    if (permission !== "granted") {
+      return { ok: false, error: "Permission refusée. Tu peux la réactiver dans les réglages du navigateur." };
+    }
+
+    const reg = await ensureWorker();
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) {
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+      });
+    }
+
+    const json = sub.toJSON();
+    const p256dh = json.keys?.["p256dh"];
+    const auth = json.keys?.["auth"];
+    if (!json.endpoint || !p256dh || !auth) {
+      return { ok: false, error: "Abonnement push invalide." };
+    }
+
+    const { data: userData } = await supabase.auth.getUser();
+    const uid = userData.user?.id;
+    if (!uid) return { ok: false, error: "Non connecté." };
+
+    const { error } = await supabase.from("push_subscriptions").upsert(
+      {
+        user_id: uid,
+        endpoint: json.endpoint,
+        p256dh,
+        auth,
+        user_agent: navigator.userAgent.slice(0, 300),
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "endpoint" },
+    );
+    if (error) return { ok: false, error: error.message };
+
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Activation impossible" };
   }
-
-  const reg = await ensureWorker();
-  let sub = await reg.pushManager.getSubscription();
-  if (!sub) {
-    sub = await reg.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
-    });
-  }
-
-  const json = sub.toJSON();
-  const p256dh = json.keys?.["p256dh"];
-  const auth = json.keys?.["auth"];
-  if (!json.endpoint || !p256dh || !auth) {
-    return { ok: false, error: "Abonnement push invalide." };
-  }
-
-  const { data: userData } = await supabase.auth.getUser();
-  const uid = userData.user?.id;
-  if (!uid) return { ok: false, error: "Non connecté." };
-
-  const { error } = await supabase.from("push_subscriptions").upsert(
-    {
-      user_id: uid,
-      endpoint: json.endpoint,
-      p256dh,
-      auth,
-      user_agent: navigator.userAgent.slice(0, 300),
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: "endpoint" },
-  );
-  if (error) return { ok: false, error: error.message };
-
-  return { ok: true };
 }
 
 export async function disablePushNotifications(): Promise<{ ok: boolean; error?: string }> {
   if (pushUnsupportedReason()) return { ok: true };
-  const reg = await ensureWorker();
-  const sub = await reg.pushManager.getSubscription();
-  if (sub) {
-    const endpoint = sub.endpoint;
-    await sub.unsubscribe().catch(() => undefined);
-    await supabase.from("push_subscriptions").delete().eq("endpoint", endpoint);
+  try {
+    const reg = await ensureWorker();
+    const sub = await reg.pushManager.getSubscription();
+    if (sub) {
+      const endpoint = sub.endpoint;
+      await sub.unsubscribe().catch(() => undefined);
+      await supabase.from("push_subscriptions").delete().eq("endpoint", endpoint);
+    }
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Désactivation impossible" };
   }
-  return { ok: true };
 }

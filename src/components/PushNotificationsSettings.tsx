@@ -16,21 +16,26 @@ export function PushNotificationsSettings() {
   const [hint, setHint] = useState<string | null>(null);
 
   const refresh = async () => {
-    const unsupported = pushUnsupportedReason();
-    if (unsupported) {
-      setHint(unsupported);
+    try {
+      const unsupported = pushUnsupportedReason();
+      if (unsupported) {
+        setHint(unsupported);
+        setOn(false);
+        return;
+      }
+      const status = await getPushStatus();
+      setOn(status.subscribed && status.permission === "granted");
+      setHint(
+        status.permission === "denied"
+          ? "Les notifications sont bloquées dans ton navigateur. Réactive-les dans les réglages du site."
+          : null,
+      );
+    } catch {
+      setHint("Impossible de vérifier les notifications pour le moment. Réessaie.");
       setOn(false);
+    } finally {
       setLoading(false);
-      return;
     }
-    const status = await getPushStatus();
-    setOn(status.subscribed && status.permission === "granted");
-    setHint(
-      status.permission === "denied"
-        ? "Les notifications sont bloquées dans ton navigateur. Réactive-les dans les réglages du site."
-        : null,
-    );
-    setLoading(false);
   };
 
   useEffect(() => {
