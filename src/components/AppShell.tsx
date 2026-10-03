@@ -33,17 +33,25 @@ export function AppShell({ children }: { children: ReactNode }) {
           {username && (
             <Link to="/u/$username" params={{ username }} className={navCls} activeProps={activeCls}><User className="h-4 w-4" />Ma vitrine</Link>
           )}
-          <Link to="/settings" className={navCls} activeProps={activeCls}><Settings className="h-4 w-4" />Paramètres</Link>
         </nav>
         <Link to="/projects/new" className="mt-6 flex items-center justify-center gap-2 rounded-lg bg-primary px-3 py-2.5 text-sm font-semibold text-primary-foreground transition hover:brightness-110">
           <Plus className="h-4 w-4" />Nouveau projet
         </Link>
-        <div className="mt-auto flex items-center gap-3 rounded-lg p-2">
+        <div className="mt-auto flex items-center gap-2 rounded-lg p-2">
           <UserAvatar profile={profile} />
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold">{profile?.display_name || username}</p>
             <p className="truncate text-xs text-muted-foreground">@{username}</p>
           </div>
+          <Link
+            to="/settings"
+            aria-label="Paramètres"
+            title="Paramètres"
+            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition hover:bg-sidebar-accent hover:text-foreground"
+            activeProps={{ className: "!text-primary bg-sidebar-accent" }}
+          >
+            <Settings className="h-4 w-4" />
+          </Link>
         </div>
       </aside>
 

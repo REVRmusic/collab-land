@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Copy, Plus, Settings, Share2 } from "lucide-react";
+import { Copy, Plus, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useMe } from "@/hooks/use-me";
@@ -130,19 +130,7 @@ function ProfilePage() {
         <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
           <UserAvatar profile={p} className="h-24 w-24 sm:h-28 sm:w-28" />
           <div className="min-w-0 flex-1">
-            <div className="flex min-w-0 items-center gap-2">
-              <h1 className="truncate text-3xl font-bold">{p.display_name || p.username}</h1>
-              {isMe && (
-                <Link
-                  to="/settings"
-                  aria-label="Paramètres"
-                  title="Paramètres"
-                  className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition hover:bg-accent hover:text-foreground"
-                >
-                  <Settings className="h-4 w-4" />
-                </Link>
-              )}
-            </div>
+            <h1 className="truncate text-3xl font-bold">{p.display_name || p.username}</h1>
             <p className="text-muted-foreground">@{p.username}</p>
             {p.bio && <p className="mt-2 max-w-xl text-sm text-foreground/80">{p.bio}</p>}
           </div>
