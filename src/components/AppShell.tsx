@@ -9,9 +9,18 @@ import { UserAvatar } from "./UserAvatar";
 
 export function Logo({ to = "/feed" }: { to?: "/" | "/feed" }) {
   return (
-    <Link to={to} className="flex items-center gap-2">
-      <img src={logoAsset.url} alt="CollabLand" className="h-8 w-8 rounded-xl" width={32} height={32} />
-      <span className="font-display text-lg font-bold tracking-tight">CollabLand</span>
+    <Link to={to} className="flex items-center gap-2" data-app-logo>
+      <img
+        src={logoAsset.url}
+        alt="CollabLand"
+        className="h-8 w-8 rounded-xl"
+        width={32}
+        height={32}
+        data-app-logo-icon
+      />
+      <span className="font-display text-lg font-bold tracking-tight" data-app-logo-text>
+        CollabLand
+      </span>
     </Link>
   );
 }
