@@ -24,6 +24,8 @@ import { Route as UUsernameRouteImport } from './routes/u.$username'
 import { Route as AuthenticatedProjectsIndexRouteImport } from './routes/_authenticated/projects.index'
 import { Route as AuthenticatedProjectsIdRouteImport } from './routes/_authenticated/projects.$id'
 import { Route as AuthenticatedProjectsNewRouteImport } from './routes/_authenticated/projects.new'
+import { Route as ApiCronPushRouteImport } from './routes/api/cron/push'
+import { Route as ApiPushDispatchRouteImport } from './routes/api/push/dispatch'
 import { Route as OgUUsernameRouteImport } from './routes/og/u.$username'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
@@ -105,6 +107,16 @@ const AuthenticatedProjectsNewRoute =
     path: '/projects/new',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiCronPushRoute = ApiCronPushRouteImport.update({
+  id: '/api/cron/push',
+  path: '/api/cron/push',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPushDispatchRoute = ApiPushDispatchRouteImport.update({
+  id: '/api/push/dispatch',
+  path: '/api/push/dispatch',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OgUUsernameRoute = OgUUsernameRouteImport.update({
   id: '/og/u/$username',
   path: '/og/u/$username',
@@ -135,6 +147,8 @@ export interface FileRoutesByFullPath {
   '/u/$username': typeof UUsernameRoute
   '/projects/$id': typeof AuthenticatedProjectsIdRoute
   '/projects/new': typeof AuthenticatedProjectsNewRoute
+  '/api/cron/push': typeof ApiCronPushRoute
+  '/api/push/dispatch': typeof ApiPushDispatchRoute
   '/og/u/$username': typeof OgUUsernameRoute
   '/projects/': typeof AuthenticatedProjectsIndexRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -154,6 +168,8 @@ export interface FileRoutesByTo {
   '/u/$username': typeof UUsernameRoute
   '/projects/$id': typeof AuthenticatedProjectsIdRoute
   '/projects/new': typeof AuthenticatedProjectsNewRoute
+  '/api/cron/push': typeof ApiCronPushRoute
+  '/api/push/dispatch': typeof ApiPushDispatchRoute
   '/og/u/$username': typeof OgUUsernameRoute
   '/projects': typeof AuthenticatedProjectsIndexRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -175,6 +191,8 @@ export interface FileRoutesById {
   '/u/$username': typeof UUsernameRoute
   '/_authenticated/projects/$id': typeof AuthenticatedProjectsIdRoute
   '/_authenticated/projects/new': typeof AuthenticatedProjectsNewRoute
+  '/api/cron/push': typeof ApiCronPushRoute
+  '/api/push/dispatch': typeof ApiPushDispatchRoute
   '/og/u/$username': typeof OgUUsernameRoute
   '/_authenticated/projects/': typeof AuthenticatedProjectsIndexRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -196,6 +214,8 @@ export interface FileRouteTypes {
     | '/u/$username'
     | '/projects/$id'
     | '/projects/new'
+    | '/api/cron/push'
+    | '/api/push/dispatch'
     | '/og/u/$username'
     | '/projects/'
     | '/lovable/email/auth/preview'
@@ -215,6 +235,8 @@ export interface FileRouteTypes {
     | '/u/$username'
     | '/projects/$id'
     | '/projects/new'
+    | '/api/cron/push'
+    | '/api/push/dispatch'
     | '/og/u/$username'
     | '/projects'
     | '/lovable/email/auth/preview'
@@ -235,6 +257,8 @@ export interface FileRouteTypes {
     | '/u/$username'
     | '/_authenticated/projects/$id'
     | '/_authenticated/projects/new'
+    | '/api/cron/push'
+    | '/api/push/dispatch'
     | '/og/u/$username'
     | '/_authenticated/projects/'
     | '/lovable/email/auth/preview'
@@ -250,6 +274,8 @@ export interface RootRouteChildren {
   InviteTokenRoute: typeof InviteTokenRoute
   OgDefaultRoute: typeof OgDefaultRoute
   UUsernameRoute: typeof UUsernameRoute
+  ApiCronPushRoute: typeof ApiCronPushRoute
+  ApiPushDispatchRoute: typeof ApiPushDispatchRoute
   OgUUsernameRoute: typeof OgUUsernameRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
@@ -362,6 +388,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProjectsNewRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/cron/push': {
+      id: '/api/cron/push'
+      path: '/api/cron/push'
+      fullPath: '/api/cron/push'
+      preLoaderRoute: typeof ApiCronPushRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/push/dispatch': {
+      id: '/api/push/dispatch'
+      path: '/api/push/dispatch'
+      fullPath: '/api/push/dispatch'
+      preLoaderRoute: typeof ApiPushDispatchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/og/u/$username': {
       id: '/og/u/$username'
       path: '/og/u/$username'
@@ -418,6 +458,8 @@ const rootRouteChildren: RootRouteChildren = {
   InviteTokenRoute: InviteTokenRoute,
   OgDefaultRoute: OgDefaultRoute,
   UUsernameRoute: UUsernameRoute,
+  ApiCronPushRoute: ApiCronPushRoute,
+  ApiPushDispatchRoute: ApiPushDispatchRoute,
   OgUUsernameRoute: OgUUsernameRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
