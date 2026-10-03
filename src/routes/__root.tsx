@@ -16,6 +16,7 @@ import { registerServiceWorker } from "@/lib/pwa";
 import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
 import { InstallAppBanner } from "@/components/InstallAppBanner";
+import { AppSplash } from "@/components/AppSplash";
 
 function NotFoundComponent() {
   return (
@@ -134,6 +135,7 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <AppSplash />
       <Outlet />
       <InstallAppBanner />
       <Toaster theme="dark" position="top-center" />
