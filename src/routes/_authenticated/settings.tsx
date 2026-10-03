@@ -9,6 +9,7 @@ import { extOf, uploadFile } from "@/lib/media";
 import { UserAvatar } from "@/components/UserAvatar";
 import { AvatarCropDialog } from "@/components/AvatarCropDialog";
 import { normalizeUsername, USERNAME_HINT, usernameError } from "@/lib/username";
+import { PushNotificationsSettings } from "@/components/PushNotificationsSettings";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -119,6 +120,7 @@ function SettingsPage() {
           </div>
           <Switch checked={form.email_digest} onCheckedChange={(v) => setForm({ ...form, email_digest: v })} />
         </div>
+        <PushNotificationsSettings />
         <Button type="submit" disabled={busy} className="w-full">Enregistrer</Button>
       </form>
       <Button variant="ghost" onClick={signOut} className="mt-4 w-full text-muted-foreground"><LogOut className="h-4 w-4" />Se déconnecter</Button>

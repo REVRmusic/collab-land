@@ -53,9 +53,30 @@ export function useNotifications(uid?: string) {
     if (!uid) return;
     const ch = supabase
       .channel(`notif-${uid}-${Math.random().toString(36).slice(2)}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${uid}` }, () =>
-        qc.invalidateQueries({ queryKey: ["notifications", uid] }),
-      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${uid}` }, (payload) => {
+        qc.invalidateQueries({ queryKey: ["notifications", uid] });
+        // Local OS notification when the tab/PWA receives a new row (desktop + mobile while open)
+        if (payload.eventType === "INSERT" && typeof Notification !== "undefined" && Notification.permission === "granted" && typeof document !== "undefined" && document.hidden) {
+          const row = payload.new as { id?: string; type?: string; project_id?: string | null; data?: Record<string, unknown>; actor_id?: string };
+          void (async () => {
+            const { notifPlainText } = await import("@/lib/push-shared");
+            let actorName: string | null = null;
+            if (row.actor_id) {
+              const { data: actor } = await supabase.from("profiles").select("display_name,username").eq("id", row.actor_id).maybeSingle();
+              actorName = actor?.display_name || actor?.username || null;
+            }
+            const { title, body } = notifPlainText(row.type || "default", row.data, actorName);
+            const url = row.project_id ? `/projects/${row.project_id}` : "/notifications";
+            const tag = row.id ?? `notif-${Date.now()}`;
+            const reg = await navigator.serviceWorker?.ready.catch(() => null);
+            if (reg?.showNotification) {
+              await reg.showNotification(title, { body, icon: "/icons/icon-192.png", tag, data: { url } });
+            } else {
+              new Notification(title, { body, icon: "/icons/icon-192.png", tag });
+            }
+          })();
+        }
+      })
       .subscribe();
     return () => {
       supabase.removeChannel(ch);
