@@ -126,30 +126,46 @@ function ProfilePage() {
 
   return (
     <div>
-      <section className="relative overflow-hidden rounded-3xl border border-border bg-card p-6 sm:p-8" style={{ backgroundImage: "var(--gradient-glow)" }}>
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-          <UserAvatar profile={p} className="h-24 w-24 sm:h-28 sm:w-28" />
+      <section className="relative overflow-hidden rounded-3xl border border-border bg-card p-5 sm:p-8" style={{ backgroundImage: "var(--gradient-glow)" }}>
+        <div className="flex items-start gap-4">
+          <UserAvatar profile={p} className="h-20 w-20 shrink-0 sm:h-28 sm:w-28" />
           <div className="min-w-0 flex-1">
-            <h1 className="truncate text-3xl font-bold">{p.display_name || p.username}</h1>
-            <p className="text-muted-foreground">@{p.username}</p>
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <h1 className="truncate text-2xl font-bold sm:text-3xl">{p.display_name || p.username}</h1>
+                <p className="text-sm text-muted-foreground sm:text-base">@{p.username}</p>
+              </div>
+              <div className="flex shrink-0 items-center gap-1.5">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={shareLink}
+                  aria-label="Partager"
+                  title="Partager"
+                  className="h-9 w-9 px-0 sm:w-auto sm:px-3"
+                >
+                  <Share2 className="h-4 w-4" />
+                  <span className="hidden sm:inline">Partager</span>
+                </Button>
+                {isMe ? (
+                  <Button asChild size="sm" className="h-9 w-9 px-0 sm:w-auto sm:px-3">
+                    <Link to="/projects/new" aria-label="Nouveau projet" title="Nouveau projet">
+                      <Plus className="h-4 w-4" />
+                      <span className="hidden sm:inline">Projet</span>
+                    </Link>
+                  </Button>
+                ) : (
+                  uid && <FriendButton me={uid} other={p.id} />
+                )}
+                {!uid && (
+                  <Button asChild size="sm" className="h-9">
+                    <Link to="/auth" search={{ next: `/u/${p.username}` }}>Rejoindre</Link>
+                  </Button>
+                )}
+              </div>
+            </div>
             {p.bio && <p className="mt-2 max-w-xl text-sm text-foreground/80">{p.bio}</p>}
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Button type="button" variant="secondary" size="sm" onClick={shareLink} className="h-9">
-              <Share2 className="h-4 w-4" />Partager
-            </Button>
-            {isMe ? (
-              <Button asChild size="sm" className="h-9">
-                <Link to="/projects/new"><Plus className="h-4 w-4" />Projet</Link>
-              </Button>
-            ) : (
-              uid && <FriendButton me={uid} other={p.id} />
-            )}
-            {!uid && (
-              <Button asChild size="sm" className="h-9">
-                <Link to="/auth" search={{ next: `/u/${p.username}` }}>Rejoindre CollabLand</Link>
-              </Button>
-            )}
           </div>
         </div>
       </section>
