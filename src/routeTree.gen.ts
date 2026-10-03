@@ -21,6 +21,7 @@ import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticat
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as OgDefaultRouteImport } from './routes/og/default'
 import { Route as UUsernameRouteImport } from './routes/u.$username'
+import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedProjectsIndexRouteImport } from './routes/_authenticated/projects.index'
 import { Route as AuthenticatedProjectsIdRouteImport } from './routes/_authenticated/projects.$id'
 import { Route as AuthenticatedProjectsNewRouteImport } from './routes/_authenticated/projects.new'
@@ -90,6 +91,11 @@ const UUsernameRoute = UUsernameRouteImport.update({
   path: '/u/$username',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedProjectsIndexRoute =
   AuthenticatedProjectsIndexRouteImport.update({
     id: '/projects/',
@@ -150,6 +156,7 @@ export interface FileRoutesByFullPath {
   '/api/cron/push': typeof ApiCronPushRoute
   '/api/push/dispatch': typeof ApiPushDispatchRoute
   '/og/u/$username': typeof OgUUsernameRoute
+  '/admin/': typeof AuthenticatedAdminIndexRoute
   '/projects/': typeof AuthenticatedProjectsIndexRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -171,6 +178,7 @@ export interface FileRoutesByTo {
   '/api/cron/push': typeof ApiCronPushRoute
   '/api/push/dispatch': typeof ApiPushDispatchRoute
   '/og/u/$username': typeof OgUUsernameRoute
+  '/admin': typeof AuthenticatedAdminIndexRoute
   '/projects': typeof AuthenticatedProjectsIndexRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -194,6 +202,7 @@ export interface FileRoutesById {
   '/api/cron/push': typeof ApiCronPushRoute
   '/api/push/dispatch': typeof ApiPushDispatchRoute
   '/og/u/$username': typeof OgUUsernameRoute
+  '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/projects/': typeof AuthenticatedProjectsIndexRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -217,6 +226,7 @@ export interface FileRouteTypes {
     | '/api/cron/push'
     | '/api/push/dispatch'
     | '/og/u/$username'
+    | '/admin/'
     | '/projects/'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -238,6 +248,7 @@ export interface FileRouteTypes {
     | '/api/cron/push'
     | '/api/push/dispatch'
     | '/og/u/$username'
+    | '/admin'
     | '/projects'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -260,6 +271,7 @@ export interface FileRouteTypes {
     | '/api/cron/push'
     | '/api/push/dispatch'
     | '/og/u/$username'
+    | '/_authenticated/admin/'
     | '/_authenticated/projects/'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -367,6 +379,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UUsernameRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin/': {
+      id: '/_authenticated/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/projects/': {
       id: '/_authenticated/projects/'
       path: '/projects'
@@ -433,6 +452,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedProjectsIdRoute: typeof AuthenticatedProjectsIdRoute
   AuthenticatedProjectsNewRoute: typeof AuthenticatedProjectsNewRoute
+  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedProjectsIndexRoute: typeof AuthenticatedProjectsIndexRoute
 }
 
@@ -443,6 +463,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedProjectsIdRoute: AuthenticatedProjectsIdRoute,
   AuthenticatedProjectsNewRoute: AuthenticatedProjectsNewRoute,
+  AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedProjectsIndexRoute: AuthenticatedProjectsIndexRoute,
 }
 

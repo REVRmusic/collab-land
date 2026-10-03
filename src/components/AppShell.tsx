@@ -1,8 +1,9 @@
 import { Link } from "@tanstack/react-router";
-import { FolderKanban, Home, Plus, Settings, User, Users } from "lucide-react";
+import { FolderKanban, Home, Plus, Settings, Shield, User, Users } from "lucide-react";
 import logoAsset from "@/assets/collabland-logo.png.asset.json";
 import type { ReactNode } from "react";
 import { useMe } from "@/hooks/use-me";
+import { useIsAdmin } from "@/hooks/use-is-admin";
 import { NotificationBell } from "./NotificationBell";
 import { UserAvatar } from "./UserAvatar";
 
@@ -21,6 +22,7 @@ const activeCls = { className: "bg-sidebar-accent !text-foreground" };
 export function AppShell({ children }: { children: ReactNode }) {
   const { uid, profile } = useMe();
   const username = profile?.username ?? "";
+  const isAdmin = useIsAdmin().data === true;
   return (
     <div className="min-h-screen">
       {/* Desktop sidebar */}
@@ -32,6 +34,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           <Link to="/friends" className={navCls} activeProps={activeCls}><Users className="h-4 w-4" />Amis</Link>
           {username && (
             <Link to="/u/$username" params={{ username }} className={navCls} activeProps={activeCls}><User className="h-4 w-4" />Ma vitrine</Link>
+          )}
+          {isAdmin && (
+            <Link to="/admin" className={navCls} activeProps={activeCls}><Shield className="h-4 w-4" />Admin</Link>
           )}
         </nav>
         <Link to="/projects/new" className="mt-6 flex items-center justify-center gap-2 rounded-lg bg-primary px-3 py-2.5 text-sm font-semibold text-primary-foreground transition hover:brightness-110">
