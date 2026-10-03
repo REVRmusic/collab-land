@@ -123,26 +123,28 @@
   place-items: center;
   background: var(--color-background);
   pointer-events: none;
-  transition: background 320ms ease, opacity 180ms ease;
+  transition: background 280ms ease;
 }
 
 body.cl-splash-active [data-app-logo] {
   opacity: 0 !important;
 }
 
-.cl-splash--morph {
+/* Fond transparent dès le vol — ne jamais le re-opacifier */
+.cl-splash--clear {
   background: transparent;
 }
 
-.cl-splash--morph .cl-splash__glow {
+.cl-splash--clear .cl-splash__glow {
   opacity: 0;
-  transition: opacity 280ms ease;
+  transition: opacity 220ms ease;
   animation: none;
 }
 
 .cl-splash--exit {
   opacity: 0;
-  transition: opacity 180ms ease;
+  background: transparent;
+  transition: opacity 120ms ease;
 }
 
 .cl-splash--exit .cl-splash__glow {

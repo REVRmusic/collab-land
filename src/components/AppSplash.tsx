@@ -150,8 +150,7 @@ export function AppSplash() {
       await morphMarkToLogo(mark, target, MORPH_MS);
       if (cancelled) return;
 
-      setPhase("fade");
-      await wait(FADE_MS);
+      // Handoff immédiat : pas de fade sur un fond opaque (évite l’écran noir)
       finish();
     };
 
@@ -165,11 +164,13 @@ export function AppSplash() {
 
   if (phase === "idle" || phase === "done") return null;
 
+  const clearBg = phase === "morph" || phase === "fade";
+
   return (
     <div
       className={[
         "cl-splash",
-        phase === "morph" ? "cl-splash--morph" : "",
+        clearBg ? "cl-splash--clear" : "",
         phase === "fade" ? "cl-splash--exit" : "",
       ]
         .filter(Boolean)
