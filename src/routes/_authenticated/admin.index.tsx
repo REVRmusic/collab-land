@@ -1,8 +1,9 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { ExternalLink, Mail, Search, Shield } from "lucide-react";
-import { checkIsAdmin, listAdminUsersFn } from "@/lib/admin.functions";
+import { checkIsAdmin, getAdminGrowthFn, listAdminUsersFn } from "@/lib/admin.functions";
+import { AdminGrowthCharts } from "@/components/AdminGrowthCharts";
 import { UserAvatar } from "@/components/UserAvatar";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -39,8 +40,7 @@ function AdminUsersPage() {
   const [term, setTerm] = useState("");
   const [debounced, setDebounced] = useState("");
 
-  // light debounce without extra deps
-  useMemo(() => {
+  useEffect(() => {
     const t = window.setTimeout(() => setDebounced(term.trim()), 250);
     return () => window.clearTimeout(t);
   }, [term]);
@@ -48,6 +48,12 @@ function AdminUsersPage() {
   const q = useQuery({
     queryKey: ["admin-users", debounced],
     queryFn: () => listAdminUsersFn({ data: { search: debounced } }),
+  });
+
+  const growth = useQuery({
+    queryKey: ["admin-growth"],
+    queryFn: () => getAdminGrowthFn(),
+    staleTime: 60_000,
   });
 
   const users = q.data?.users ?? [];
@@ -152,6 +158,12 @@ function AdminUsersPage() {
           ))}
         </ul>
       </div>
+
+      <AdminGrowthCharts
+        projects={growth.data?.projects ?? []}
+        profiles={growth.data?.profiles ?? []}
+        loading={growth.isLoading}
+      />
     </div>
   );
 }

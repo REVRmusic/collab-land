@@ -94,3 +94,74 @@ export async function listAdminUsers(search?: string): Promise<{ users: AdminUse
 
   return { users, total: count ?? users.length };
 }
+
+export type AdminGrowthPoint = {
+  date: string; // YYYY-MM-DD
+  label: string;
+  new: number;
+  total: number;
+};
+
+function dayKey(d: Date): string {
+  return d.toISOString().slice(0, 10);
+}
+
+function formatDayLabel(isoDay: string): string {
+  const [y, m, d] = isoDay.split("-").map(Number);
+  const date = new Date(Date.UTC(y!, m! - 1, d!));
+  return date.toLocaleDateString("fr-FR", { day: "numeric", month: "short", timeZone: "UTC" });
+}
+
+/** Série quotidienne cumulée (90 derniers jours, trous à 0). */
+function buildCumulativeSeries(timestamps: string[], days = 90): AdminGrowthPoint[] {
+  const end = new Date();
+  end.setUTCHours(0, 0, 0, 0);
+  const start = new Date(end);
+  start.setUTCDate(start.getUTCDate() - (days - 1));
+
+  const perDay = new Map<string, number>();
+  let before = 0;
+  for (const raw of timestamps) {
+    const t = new Date(raw);
+    if (Number.isNaN(t.getTime())) continue;
+    const key = dayKey(new Date(Date.UTC(t.getUTCFullYear(), t.getUTCMonth(), t.getUTCDate())));
+    if (key < dayKey(start)) {
+      before += 1;
+      continue;
+    }
+    if (key > dayKey(end)) continue;
+    perDay.set(key, (perDay.get(key) ?? 0) + 1);
+  }
+
+  const points: AdminGrowthPoint[] = [];
+  let running = before;
+  const cursor = new Date(start);
+  while (cursor <= end) {
+    const key = dayKey(cursor);
+    const n = perDay.get(key) ?? 0;
+    running += n;
+    points.push({ date: key, label: formatDayLabel(key), new: n, total: running });
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+  return points;
+}
+
+export async function getAdminGrowthSeries(): Promise<{
+  projects: AdminGrowthPoint[];
+  profiles: AdminGrowthPoint[];
+}> {
+  await assertAdminUserId();
+  const sb = serviceClient();
+
+  const [projectsRes, profilesRes] = await Promise.all([
+    sb.from("projects").select("created_at").order("created_at", { ascending: true }),
+    sb.from("profiles").select("created_at").order("created_at", { ascending: true }),
+  ]);
+  if (projectsRes.error) throw projectsRes.error;
+  if (profilesRes.error) throw profilesRes.error;
+
+  return {
+    projects: buildCumulativeSeries((projectsRes.data ?? []).map((p) => p.created_at)),
+    profiles: buildCumulativeSeries((profilesRes.data ?? []).map((p) => p.created_at)),
+  };
+}

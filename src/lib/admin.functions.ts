@@ -18,3 +18,8 @@ export const listAdminUsersFn = createServerFn({ method: "GET" })
     const { listAdminUsers } = await import("@/lib/admin.server");
     return listAdminUsers(data.search);
   });
+
+export const getAdminGrowthFn = createServerFn({ method: "GET" }).handler(async () => {
+  const { getAdminGrowthSeries } = await import("@/lib/admin.server");
+  return getAdminGrowthSeries();
+});
