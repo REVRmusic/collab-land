@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ExternalLink, Mail, Search, Shield } from "lucide-react";
 import { checkIsAdmin, getAdminGrowthFn, listAdminUsersFn } from "@/lib/admin.functions";
 import { AdminGrowthCharts } from "@/components/AdminGrowthCharts";
+import { AdminDigestCard } from "@/components/AdminDigestCard";
 import { UserAvatar } from "@/components/UserAvatar";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -158,6 +159,8 @@ function AdminUsersPage() {
           ))}
         </ul>
       </div>
+
+      <AdminDigestCard />
 
       <AdminGrowthCharts
         projects={growth.data?.projects ?? []}

@@ -120,6 +120,13 @@
       "when": 1790987000000,
       "tag": "0016_app_admins",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1791000000000,
+      "tag": "0017_email_digest_index",
+      "breakpoints": true
     }
   ]
 }

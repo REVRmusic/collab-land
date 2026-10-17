@@ -11,7 +11,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "digest": "tsx scripts/send-daily-digest.ts"
   },
   "overrides": {
     "rolldown": "1.2.1"

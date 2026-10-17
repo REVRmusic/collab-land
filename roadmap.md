@@ -11,4 +11,4 @@
 - [x] Fil d'activité (versions, vocaux, annotations)
 - [x] Invitation projet par lien (hors amis)
 - [x] Vitrine publique partageable
-- [ ] Résumé quotidien par email — bloqué : domaine d'envoi d'emails à configurer par l'utilisateur
+- [x] Résumé quotidien par email (template récapitulatif 24h, job cron /api/cron/digest et batch d'envoi)
