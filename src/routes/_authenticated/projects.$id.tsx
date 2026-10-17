@@ -191,22 +191,12 @@ function ProjectPage() {
 
       {isOwner && <StemRequests projectId={id} versions={versions.data ?? []} />}
 
-      <Tabs defaultValue="discussion" className="mt-6">
+      <Tabs defaultValue="versions" className="mt-6">
         <TabsList className="w-full justify-start sm:w-auto">
-          <TabsTrigger value="discussion" onClick={() => { if (isMobile) setMobileDiscussionOpen(true); }}><MessageCircle className="h-4 w-4" />Discussion</TabsTrigger>
           <TabsTrigger value="versions"><GitBranch className="h-4 w-4" />Versions ({versions.data?.length ?? 0})</TabsTrigger>
+          <TabsTrigger value="discussion" onClick={() => { if (isMobile) setMobileDiscussionOpen(true); }}><MessageCircle className="h-4 w-4" />Discussion</TabsTrigger>
           <TabsTrigger value="covers"><Palette className="h-4 w-4" />Covers</TabsTrigger>
         </TabsList>
-        <TabsContent value="discussion" className="mt-4">
-          {uid && (
-            <>
-              <Button className="h-12 w-full md:hidden" onClick={() => setMobileDiscussionOpen(true)}>
-                <MessageCircle className="h-4 w-4" />Ouvrir la discussion
-              </Button>
-              <Discussion projectId={id} uid={uid} projectTitle={p.title} mobileOpen={mobileDiscussionOpen} onMobileClose={() => setMobileDiscussionOpen(false)} />
-            </>
-          )}
-        </TabsContent>
         <TabsContent value="versions" className="mt-4">
           <ol className="relative space-y-4 border-l border-border pl-6">
             {versions.data?.map((v, i) => (
@@ -250,6 +240,16 @@ function ProjectPage() {
               </li>
             ))}
           </ol>
+        </TabsContent>
+        <TabsContent value="discussion" className="mt-4">
+          {uid && (
+            <>
+              <Button className="h-12 w-full md:hidden" onClick={() => setMobileDiscussionOpen(true)}>
+                <MessageCircle className="h-4 w-4" />Ouvrir la discussion
+              </Button>
+              <Discussion projectId={id} uid={uid} projectTitle={p.title} mobileOpen={mobileDiscussionOpen} onMobileClose={() => setMobileDiscussionOpen(false)} />
+            </>
+          )}
         </TabsContent>
         <TabsContent value="covers" className="mt-4">{uid && <Covers projectId={id} uid={uid} isOwner={isOwner} currentCover={p.cover_url} />}</TabsContent>
       </Tabs>
