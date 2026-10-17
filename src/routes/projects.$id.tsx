@@ -24,8 +24,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { getProjectShareMeta } from "@/lib/project-share.functions";
 import { buildProjectShareMeta } from "@/lib/share-meta";
+import { AppShell, Logo } from "@/components/AppShell";
+import { LegalFooter } from "@/components/LegalPage";
 
-export const Route = createFileRoute("/_authenticated/projects/$id")({
+export const Route = createFileRoute("/projects/$id")({
   loader: ({ params }) => getProjectShareMeta({ data: { id: params.id } }),
   head: ({ loaderData, params }) => {
     const share = loaderData ?? buildProjectShareMeta(null, params.id, "https://collab-land.lovable.app");
@@ -38,6 +40,7 @@ export const Route = createFileRoute("/_authenticated/projects/$id")({
         { property: "og:description", content: share.description },
         { property: "og:url", content: share.pageUrl },
         { property: "og:image", content: share.imageUrl },
+        { property: "og:image:type", content: "image/png" },
         { property: "og:image:width", content: "1200" },
         { property: "og:image:height", content: "630" },
         { property: "og:image:alt", content: `Pochette et détails du projet ${share.project?.title || "CollabLand"}` },
@@ -51,8 +54,122 @@ export const Route = createFileRoute("/_authenticated/projects/$id")({
       links: [{ rel: "canonical", href: share.pageUrl }],
     };
   },
-  component: ProjectPage,
+  component: ProjectRoute,
 });
+
+function ProjectRoute() {
+  const { uid, loading } = useMe();
+  const { id } = Route.useParams();
+  const share = Route.useLoaderData();
+
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-5xl p-6">
+        <Skeleton className="h-64 rounded-3xl" />
+      </div>
+    );
+  }
+
+  if (uid) {
+    return (
+      <AppShell>
+        <ProjectPage />
+      </AppShell>
+    );
+  }
+
+  return <PublicProjectView id={id} share={share} />;
+}
+
+function PublicProjectView({ id, share }: { id: string; share?: ReturnType<typeof buildProjectShareMeta> | null }) {
+  const p = share?.project;
+  const projectTitle = p?.title || "Projet musical";
+  const ownerName = p?.owner_name || "Producteur";
+  const versionsCount = p?.version_count ?? 1;
+
+  return (
+    <div className="min-h-screen" style={{ backgroundImage: "var(--gradient-glow)" }}>
+      <header className="mx-auto flex max-w-5xl items-center justify-between px-5 py-5">
+        <Logo to="/" />
+        <div className="flex items-center gap-3">
+          <Link
+            to="/auth"
+            search={{ next: `/projects/${id}` }}
+            className="rounded-full border border-border px-4 py-2 text-sm font-medium hover:bg-accent"
+          >
+            Connexion
+          </Link>
+          <Button asChild size="sm" className="rounded-full">
+            <Link to="/auth" search={{ next: `/projects/${id}` }}>
+              Rejoindre
+            </Link>
+          </Button>
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-5xl px-5 pb-16">
+        <section className="relative overflow-hidden rounded-3xl border border-border bg-card p-6 sm:p-8" style={{ backgroundImage: "var(--gradient-glow)" }}>
+          <div className="flex flex-col gap-6 md:flex-row md:items-center">
+            <CoverImage path={p?.cover_url ?? null} className="aspect-square w-full rounded-2xl md:w-64" seed={`${id}:${projectTitle}`} />
+            <div className="flex min-w-0 flex-1 flex-col">
+              <span className="text-sm font-medium text-muted-foreground">
+                Projet partagé par <span className="font-semibold text-foreground">{ownerName}</span>
+              </span>
+              <h1 className="mt-2 text-3xl font-bold leading-tight sm:text-5xl">{projectTitle}</h1>
+              <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                {p?.genre && <span className="rounded-full bg-secondary px-3 py-1 font-medium"># {p.genre}</span>}
+                {p?.bpm && <span className="rounded-full bg-secondary px-3 py-1 font-medium">{p.bpm} BPM</span>}
+                {p?.musical_key && <span className="rounded-full bg-secondary px-3 py-1 font-medium">{p.musical_key}</span>}
+                <span className="rounded-full bg-primary/15 px-3 py-1 font-semibold text-primary">
+                  {versionsCount} version{versionsCount > 1 ? "s" : ""}
+                </span>
+              </div>
+              {p?.help_needed && (
+                <div className="mt-4 flex max-w-2xl items-start gap-2 rounded-xl border border-primary/40 bg-primary/10 px-3.5 py-2.5 text-sm">
+                  <LifeBuoy className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                  <span>
+                    <span className="font-semibold text-primary">Besoin d'aide : </span>
+                    {p.help_needed}
+                  </span>
+                </div>
+              )}
+              {p?.description && <p className="mt-3 max-w-2xl text-sm text-foreground/80">{p.description}</p>}
+
+              <div className="mt-6 flex flex-wrap items-center gap-3 pt-2">
+                <Button asChild size="lg" className="rounded-full px-6 font-semibold shadow-lg">
+                  <Link to="/auth" search={{ next: `/projects/${id}` }}>
+                    Se connecter pour écouter et collaborer
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" size="lg" className="rounded-full px-5 font-medium">
+                  <Link to="/auth" search={{ next: `/projects/${id}` }}>
+                    Créer un compte
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div className="mt-8 rounded-2xl border border-border/80 bg-card/60 p-6 text-center backdrop-blur sm:p-8">
+          <h2 className="text-xl font-bold">Collabore sur ce morceau avec {ownerName}</h2>
+          <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground">
+            CollabLand permet aux producteurs de musique d'échanger des versions démos avec lecteur waveform, de télécharger les STEMS et de centraliser les retours audio en studio.
+          </p>
+          <div className="mt-5 flex justify-center gap-3">
+            <Button asChild size="sm" variant="secondary" className="rounded-full">
+              <Link to="/auth" search={{ next: `/projects/${id}` }}>
+                Rejoindre la collaboration
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </main>
+
+      <LegalFooter />
+    </div>
+  );
+}
 
 type Prof = { id: string; username: string; display_name: string | null; avatar_url: string | null };
 
@@ -407,7 +524,6 @@ function StemRequests({ projectId, versions }: { projectId: string; versions: Ve
     </>
   );
 }
-
 
 function Covers({ projectId, uid, isOwner, currentCover }: { projectId: string; uid: string; isOwner: boolean; currentCover: string | null }) {
   const qc = useQueryClient();

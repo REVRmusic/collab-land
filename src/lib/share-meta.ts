@@ -163,12 +163,26 @@ export function projectOgSvg(opts: ProjectOgSvgOptions): string {
   const safeOwner = escapeXml(opts.ownerName);
   const safeUsername = escapeXml(opts.ownerUsername);
 
-  // Construction des pills de métadonnées
-  const pills: { label: string; icon: string; highlight?: boolean }[] = [];
-  pills.push({ label: versionText, icon: "⚡", highlight: true });
-  if (opts.bpm) pills.push({ label: `${opts.bpm} BPM`, icon: "⏱" });
-  if (opts.musicalKey) pills.push({ label: opts.musicalKey, icon: "🎹" });
-  if (opts.genre) pills.push({ label: opts.genre, icon: "🎵" });
+  type Pill = { label: string; kind: "version" | "bpm" | "key" | "genre"; highlight?: boolean };
+  const pills: Pill[] = [];
+  pills.push({ label: versionText, kind: "version", highlight: true });
+  if (opts.bpm) pills.push({ label: `${opts.bpm} BPM`, kind: "bpm" });
+  if (opts.musicalKey) pills.push({ label: opts.musicalKey, kind: "key" });
+  if (opts.genre) pills.push({ label: opts.genre, kind: "genre" });
+
+  const renderIconSvg = (kind: "version" | "bpm" | "key" | "genre", highlight?: boolean) => {
+    const color = highlight ? "#ffffff" : "#a78bfa";
+    switch (kind) {
+      case "version":
+        return `<polygon points="5,0 1,7 6,7 3,14 11,6 6,6" fill="${color}" />`;
+      case "bpm":
+        return `<circle cx="7" cy="7" r="6" stroke="${color}" stroke-width="1.4" fill="none"/><line x1="7" y1="3.5" x2="7" y2="7" stroke="${color}" stroke-width="1.4"/><line x1="7" y1="7" x2="10" y2="7" stroke="${color}" stroke-width="1.4"/>`;
+      case "key":
+        return `<path d="M4 11 A3 3 0 1 1 1 8 A3 3 0 0 1 4 11 Z M4 8 L4 1 L10 3 L10 6 L4 4" fill="${color}" />`;
+      case "genre":
+        return `<rect x="1" y="2" width="10" height="8" rx="2" fill="none" stroke="${color}" stroke-width="1.3" /><circle cx="4" cy="6" r="1" fill="${color}"/>`;
+    }
+  };
 
   let pillX = 510;
   const pillSvg = pills
@@ -181,13 +195,19 @@ export function projectOgSvg(opts: ProjectOgSvgOptions): string {
         return `
         <g transform="translate(${currentX}, 248)">
           <rect width="${width}" height="36" rx="12" fill="#7c3aed" />
-          <text x="14" y="23" font-family="'Space Grotesk', system-ui, sans-serif" font-size="14" font-weight="700" fill="#ffffff">${escapeXml(p.icon)} ${escapeXml(p.label)}</text>
+          <g transform="translate(14, 11)">
+            ${renderIconSvg(p.kind, true)}
+          </g>
+          <text x="32" y="23" font-family="'Space Grotesk', system-ui, sans-serif" font-size="14" font-weight="700" fill="#ffffff">${escapeXml(p.label)}</text>
         </g>`;
       }
       return `
       <g transform="translate(${currentX}, 248)">
         <rect width="${width}" height="36" rx="12" fill="#1b1429" stroke="#3b2b57" stroke-width="1.2" />
-        <text x="14" y="23" font-family="system-ui, sans-serif" font-size="13" font-weight="600" fill="#d8cbff">${escapeXml(p.icon)} ${escapeXml(p.label)}</text>
+        <g transform="translate(14, 11)">
+          ${renderIconSvg(p.kind, false)}
+        </g>
+        <text x="32" y="23" font-family="'Space Grotesk', system-ui, sans-serif" font-size="13" font-weight="600" fill="#d8cbff">${escapeXml(p.label)}</text>
       </g>`;
     })
     .join("");
@@ -288,7 +308,10 @@ export function projectOgSvg(opts: ProjectOgSvgOptions): string {
   <!-- Badge sur la cover en bas à gauche -->
   <g transform="translate(86, 460)">
     <rect width="185" height="38" rx="12" fill="#0d0b14" fill-opacity="0.9" stroke="#ffffff" stroke-opacity="0.2"/>
-    <text x="14" y="24" font-family="'Space Grotesk', system-ui, sans-serif" font-size="13" font-weight="700" fill="#ffffff">🎧 ${escapeXml(versionText)}</text>
+    <g transform="translate(14, 12)">
+      <polygon points="5,0 1,7 6,7 3,14 11,6 6,6" fill="#a855f7" />
+    </g>
+    <text x="32" y="24" font-family="'Space Grotesk', system-ui, sans-serif" font-size="13" font-weight="700" fill="#ffffff">${escapeXml(versionText)}</text>
   </g>
 
   <!-- Colonne Droite: Titre du son -->
@@ -304,8 +327,8 @@ export function projectOgSvg(opts: ProjectOgSvgOptions): string {
     <!-- Artiste / DJ -->
     <g transform="translate(0, ${titleLines.length === 1 ? 78 : 112})">
       <circle cx="12" cy="0" r="12" fill="#7c3aed"/>
-      <text x="12" y="5" font-family="system-ui, sans-serif" font-size="12" font-weight="700" text-anchor="middle" fill="#ffffff">${escapeXml(safeOwner.charAt(0))}</text>
-      <text x="34" y="5" font-family="system-ui, sans-serif" font-size="20" fill="#c4b5fd">Par <tspan font-weight="700" fill="#ffffff">${safeOwner}</tspan> <tspan fill="#9d8ac7" font-size="16">(@${safeUsername})</tspan></text>
+      <text x="12" y="5" font-family="'Space Grotesk', system-ui, sans-serif" font-size="12" font-weight="700" text-anchor="middle" fill="#ffffff">${escapeXml(safeOwner.charAt(0))}</text>
+      <text x="34" y="5" font-family="'Space Grotesk', system-ui, sans-serif" font-size="20" fill="#c4b5fd">Par <tspan font-weight="700" fill="#ffffff">${safeOwner}</tspan> <tspan fill="#9d8ac7" font-size="16">(@${safeUsername})</tspan></text>
     </g>
   </g>
 
@@ -319,7 +342,7 @@ export function projectOgSvg(opts: ProjectOgSvgOptions): string {
     <!-- En-tête du cadre -->
     <g transform="translate(20, 24)">
       <circle cx="8" cy="8" r="8" fill="#7c3aed" fill-opacity="0.3"/>
-      <text x="8" y="12" font-family="system-ui, sans-serif" font-size="11" text-anchor="middle" fill="#c084fc">✦</text>
+      <circle cx="8" cy="8" r="3.5" fill="#c084fc"/>
       <text x="26" y="12" font-family="'Space Grotesk', system-ui, sans-serif" font-size="12" font-weight="700" letter-spacing="1.2" fill="#c084fc">
         ${opts.helpNeeded?.trim() ? "MODIFICATIONS SOUHAITÉES PAR LE DJ" : "COLLABORATION & RETOURS"}
       </text>
@@ -330,7 +353,7 @@ export function projectOgSvg(opts: ProjectOgSvgOptions): string {
       ${helpLines
         .map(
           (line, i) =>
-            `<text x="0" y="${i * 26}" font-family="system-ui, sans-serif" font-size="16" line-height="24" fill="#ede8f8">${escapeXml(line)}</text>`,
+            `<text x="0" y="${i * 26}" font-family="'Space Grotesk', system-ui, sans-serif" font-size="16" line-height="24" fill="#ede8f8">${escapeXml(line)}</text>`,
         )
         .join("")}
     </g>
@@ -338,8 +361,9 @@ export function projectOgSvg(opts: ProjectOgSvgOptions): string {
     <!-- Footer dans le cadre -->
     <line x1="20" y1="150" x2="600" y2="150" stroke="#ffffff" stroke-opacity="0.08" stroke-width="1"/>
     <g transform="translate(20, 172)">
-      <text x="0" y="0" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#a78bfa">
-        🎛️ Démo en écoute · Fichiers du projet &amp; STEMS téléchargeables
+      <circle cx="4" cy="-4" r="3" fill="#a855f7"/>
+      <text x="14" y="0" font-family="'Space Grotesk', system-ui, sans-serif" font-size="12" font-weight="600" fill="#a78bfa">
+        Démo audio · Fichiers du projet &amp; STEMS téléchargeables
       </text>
     </g>
   </g>
@@ -429,23 +453,28 @@ export function profileOgSvg(opts: ProfileOgSvgOptions): string {
   <!-- Badge sous l'avatar -->
   <g transform="translate(125, 435)">
     <rect width="170" height="34" rx="17" fill="#171126" stroke="#4a356e" stroke-width="1.2"/>
-    <text x="85" y="22" font-family="system-ui, sans-serif" font-size="13" font-weight="600" text-anchor="middle" fill="#d4c4ff">🎧 En studio</text>
+    <circle cx="28" cy="17" r="4" fill="#a855f7"/>
+    <text x="94" y="22" font-family="'Space Grotesk', system-ui, sans-serif" font-size="13" font-weight="600" text-anchor="middle" fill="#d4c4ff">En studio</text>
   </g>
 
   <!-- Colonne Droite : Nom, Pseudo, Bio et Stats -->
   <g transform="translate(400, 175)">
     <text x="0" y="44" font-family="'Space Grotesk', system-ui, sans-serif" font-size="48" font-weight="700" fill="#ffffff" letter-spacing="-0.8">${safeName}</text>
-    <text x="0" y="82" font-family="system-ui, sans-serif" font-size="24" font-weight="500" fill="#c4b5fd">@${safeUsername}</text>
+    <text x="0" y="82" font-family="'Space Grotesk', system-ui, sans-serif" font-size="24" font-weight="500" fill="#c4b5fd">@${safeUsername}</text>
 
     <!-- Pills de stats -->
     <g transform="translate(0, 115)">
       <g>
         <rect width="180" height="36" rx="12" fill="#7c3aed"/>
-        <text x="14" y="23" font-family="'Space Grotesk', system-ui, sans-serif" font-size="14" font-weight="700" fill="#ffffff">🎵 ${escapeXml(projectLabel)}</text>
+        <g transform="translate(14, 11)">
+          <path d="M4 11 A3 3 0 1 1 1 8 A3 3 0 0 1 4 11 Z M4 8 L4 1 L10 3 L10 6 L4 4" fill="#ffffff" />
+        </g>
+        <text x="32" y="23" font-family="'Space Grotesk', system-ui, sans-serif" font-size="14" font-weight="700" fill="#ffffff">${escapeXml(projectLabel)}</text>
       </g>
       <g transform="translate(192, 0)">
         <rect width="210" height="36" rx="12" fill="#1b1429" stroke="#3b2b57" stroke-width="1.2"/>
-        <text x="14" y="23" font-family="system-ui, sans-serif" font-size="13" font-weight="600" fill="#d8cbff">🤝 Collaborations ouvertes</text>
+        <circle cx="22" cy="18" r="4" fill="#a855f7"/>
+        <text x="36" y="23" font-family="'Space Grotesk', system-ui, sans-serif" font-size="13" font-weight="600" fill="#d8cbff">Collaborations ouvertes</text>
       </g>
     </g>
 
@@ -456,7 +485,7 @@ export function profileOgSvg(opts: ProfileOgSvgOptions): string {
         ${bioLines
           .map(
             (line, i) =>
-              `<text x="0" y="${i * 26}" font-family="system-ui, sans-serif" font-size="17" fill="#ede8f8">${escapeXml(line)}</text>`,
+              `<text x="0" y="${i * 26}" font-family="'Space Grotesk', system-ui, sans-serif" font-size="17" fill="#ede8f8">${escapeXml(line)}</text>`,
           )
           .join("")}
       </g>
@@ -502,10 +531,10 @@ export function defaultOgSvg(): string {
   <text x="600" y="295" font-family="'Space Grotesk', system-ui, sans-serif" font-size="30" font-weight="600" text-anchor="middle" fill="#d4c4ff">Faites de la musique ensemble</text>
 
   <!-- Description -->
-  <text x="600" y="350" font-family="system-ui, sans-serif" font-size="19" text-anchor="middle" fill="#ede8f8">
+  <text x="600" y="350" font-family="'Space Grotesk', system-ui, sans-serif" font-size="19" text-anchor="middle" fill="#ede8f8">
     Le studio collaboratif pour les producteurs de musique : versions, waveform en direct,
   </text>
-  <text x="600" y="380" font-family="system-ui, sans-serif" font-size="19" text-anchor="middle" fill="#ede8f8">
+  <text x="600" y="380" font-family="'Space Grotesk', system-ui, sans-serif" font-size="19" text-anchor="middle" fill="#ede8f8">
     retours vocaux et échange de STEMS en toute simplicité.
   </text>
 
@@ -513,19 +542,23 @@ export function defaultOgSvg(): string {
   <g transform="translate(160, 430)">
     <g transform="translate(0, 0)">
       <rect width="205" height="42" rx="14" fill="#1b132a" stroke="#433061" stroke-width="1.2"/>
-      <text x="102" y="26" font-family="'Space Grotesk', system-ui, sans-serif" font-size="14" font-weight="600" text-anchor="middle" fill="#ffffff">🎧 Lecteur Waveform</text>
+      <circle cx="28" cy="21" r="5" fill="#a855f7"/>
+      <text x="114" y="26" font-family="'Space Grotesk', system-ui, sans-serif" font-size="14" font-weight="600" text-anchor="middle" fill="#ffffff">Lecteur Waveform</text>
     </g>
     <g transform="translate(225, 0)">
       <rect width="205" height="42" rx="14" fill="#1b132a" stroke="#433061" stroke-width="1.2"/>
-      <text x="102" y="26" font-family="'Space Grotesk', system-ui, sans-serif" font-size="14" font-weight="600" text-anchor="middle" fill="#ffffff">🔁 Gestion des Versions</text>
+      <circle cx="28" cy="21" r="5" fill="#a855f7"/>
+      <text x="114" y="26" font-family="'Space Grotesk', system-ui, sans-serif" font-size="14" font-weight="600" text-anchor="middle" fill="#ffffff">Gestion des Versions</text>
     </g>
     <g transform="translate(450, 0)">
       <rect width="205" height="42" rx="14" fill="#1b132a" stroke="#433061" stroke-width="1.2"/>
-      <text x="102" y="26" font-family="'Space Grotesk', system-ui, sans-serif" font-size="14" font-weight="600" text-anchor="middle" fill="#ffffff">🎙️ Retours Vocaux</text>
+      <circle cx="28" cy="21" r="5" fill="#a855f7"/>
+      <text x="114" y="26" font-family="'Space Grotesk', system-ui, sans-serif" font-size="14" font-weight="600" text-anchor="middle" fill="#ffffff">Retours Vocaux</text>
     </g>
     <g transform="translate(675, 0)">
       <rect width="205" height="42" rx="14" fill="#1b132a" stroke="#433061" stroke-width="1.2"/>
-      <text x="102" y="26" font-family="'Space Grotesk', system-ui, sans-serif" font-size="14" font-weight="600" text-anchor="middle" fill="#ffffff">🎛️ Sessions &amp; STEMS</text>
+      <circle cx="28" cy="21" r="5" fill="#a855f7"/>
+      <text x="114" y="26" font-family="'Space Grotesk', system-ui, sans-serif" font-size="14" font-weight="600" text-anchor="middle" fill="#ffffff">Sessions &amp; STEMS</text>
     </g>
   </g>
 

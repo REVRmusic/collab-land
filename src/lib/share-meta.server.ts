@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { initWasm, Resvg } from "@resvg/resvg-wasm";
 import type { Database } from "@/integrations/supabase/types";
 import {
   buildProfileShareMeta,
@@ -32,9 +33,15 @@ function createSupabaseFetch(supabaseKey: string): typeof fetch {
 }
 
 function serviceClient(): SupabaseClient<Database> {
-  const url = process.env["SUPABASE_URL"] || process.env["VITE_SUPABASE_URL"];
+  const url =
+    process.env["SUPABASE_URL"] ||
+    process.env["VITE_SUPABASE_URL"] ||
+    (typeof import.meta !== "undefined" ? (import.meta as any).env?.["VITE_SUPABASE_URL"] : undefined);
   const serviceKey = process.env["SUPABASE_SERVICE_ROLE_KEY"];
-  const pubKey = process.env["SUPABASE_PUBLISHABLE_KEY"] || process.env["VITE_SUPABASE_PUBLISHABLE_KEY"];
+  const pubKey =
+    process.env["SUPABASE_PUBLISHABLE_KEY"] ||
+    process.env["VITE_SUPABASE_PUBLISHABLE_KEY"] ||
+    (typeof import.meta !== "undefined" ? (import.meta as any).env?.["VITE_SUPABASE_PUBLISHABLE_KEY"] : undefined);
   const key = serviceKey || pubKey;
   if (!url || !key) throw new Error("Supabase URL/key manquants pour les aperçus de partage");
 
@@ -84,6 +91,110 @@ async function fetchImageDataUri(
   }
 }
 
+// ---------------------------------------------------------------------------
+// Rendu Raster PNG via resvg-wasm avec police Space Grotesk
+// ---------------------------------------------------------------------------
+
+let wasmInitDone = false;
+let fontBufferCache: Uint8Array | null = null;
+let resvgInitPromise: Promise<void> | null = null;
+
+async function loadSpaceGroteskFont(): Promise<Uint8Array | null> {
+  if (fontBufferCache) return fontBufferCache;
+
+  // 1. Essai depuis le système de fichiers local
+  try {
+    const fs = await import("node:fs");
+    const path = await import("node:path");
+    const localPaths = [
+      path.resolve(process.cwd(), "public/og/SpaceGrotesk.ttf"),
+      path.resolve(process.cwd(), ".output/public/og/SpaceGrotesk.ttf"),
+    ];
+    for (const p of localPaths) {
+      if (fs.existsSync(p)) {
+        fontBufferCache = new Uint8Array(fs.readFileSync(p));
+        return fontBufferCache;
+      }
+    }
+  } catch {}
+
+  // 2. Téléchargement de secours sur CDN
+  try {
+    const res = await fetch("https://raw.githubusercontent.com/google/fonts/main/ofl/spacegrotesk/SpaceGrotesk%5Bwght%5D.ttf");
+    if (res.ok) {
+      const ab = await res.arrayBuffer();
+      fontBufferCache = new Uint8Array(ab);
+      return fontBufferCache;
+    }
+  } catch {}
+
+  return null;
+}
+
+async function ensureResvgEngine(): Promise<void> {
+  if (wasmInitDone) return;
+  if (!resvgInitPromise) {
+    resvgInitPromise = (async () => {
+      let wasmBuffer: ArrayBuffer | Uint8Array | null = null;
+
+      // 1. Essai fichier local
+      try {
+        const fs = await import("node:fs");
+        const path = await import("node:path");
+        const candidates = [
+          path.resolve(process.cwd(), "node_modules/@resvg/resvg-wasm/index_bg.wasm"),
+          path.resolve(process.cwd(), "public/og/index_bg.wasm"),
+          path.resolve(process.cwd(), ".output/public/og/index_bg.wasm"),
+        ];
+        for (const p of candidates) {
+          if (fs.existsSync(p)) {
+            wasmBuffer = fs.readFileSync(p);
+            break;
+          }
+        }
+      } catch {}
+
+      // 2. Secours CDN
+      if (!wasmBuffer) {
+        const res = await fetch("https://unpkg.com/@resvg/resvg-wasm@2.6.2/index_bg.wasm");
+        if (!res.ok) throw new Error("Impossible de charger index_bg.wasm");
+        wasmBuffer = await res.arrayBuffer();
+      }
+
+      await initWasm(wasmBuffer);
+      wasmInitDone = true;
+    })();
+  }
+  return resvgInitPromise;
+}
+
+export async function renderSvgToPng(svg: string): Promise<Uint8Array | null> {
+  try {
+    await ensureResvgEngine();
+    const fontBuf = await loadSpaceGroteskFont();
+
+    const resvg = new Resvg(svg, {
+      font: fontBuf
+        ? {
+            fontBuffers: [fontBuf],
+            defaultFontFamily: "Space Grotesk",
+          }
+        : undefined,
+      fitTo: { mode: "width", value: 1200 },
+    });
+
+    const pngData = resvg.render();
+    return pngData.asPng();
+  } catch (err) {
+    console.error("[share-meta] Erreur rasterisation SVG -> PNG:", err);
+    return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Données de partage & réponses HTTP
+// ---------------------------------------------------------------------------
+
 export async function fetchProfileByUsername(username: string): Promise<ProfileShareRow | null> {
   const sb = serviceClient();
   const { data, error } = await sb
@@ -111,6 +222,32 @@ export async function loadProfileSharePayload(username: string, request?: Reques
 
 export async function fetchProjectShareData(projectId: string): Promise<ProjectShareData | null> {
   const sb = serviceClient();
+
+  // 1. Tenter la fonction RPC get_project_share_info (contourne RLS même en mode anonyme)
+  try {
+    const { data: rpcData, error: rpcErr } = await sb.rpc("get_project_share_info", { _project_id: projectId });
+    if (!rpcErr && rpcData && typeof rpcData === "object" && (rpcData as any).id) {
+      const p = rpcData as any;
+      return {
+        id: p.id,
+        title: p.title || "Projet musical",
+        description: p.description || null,
+        help_needed: p.help_needed || null,
+        genre: p.genre || null,
+        bpm: p.bpm || null,
+        musical_key: p.musical_key || null,
+        cover_url: p.cover_url || null,
+        created_at: p.created_at || new Date().toISOString(),
+        version_count: Number(p.version_count) || 1,
+        latest_version_number: Number(p.latest_version_number) || 1,
+        owner_name: p.owner_name || "Producteur",
+        owner_username: p.owner_username || "producer",
+        owner_avatar_url: p.owner_avatar_url || null,
+      };
+    }
+  } catch {}
+
+  // 2. Requête directe de secours
   const { data: p, error } = await sb
     .from("projects")
     .select(`
@@ -172,7 +309,7 @@ export async function loadProjectSharePayload(projectId: string, request?: Reque
 }
 
 /**
- * Génère l'image SVG Open Graph pour un projet musical.
+ * Génère l'image Open Graph pour un projet musical (PNG rasterisé compatible avec tous les réseaux sociaux).
  */
 export async function projectOgResponse(projectId: string): Promise<Response> {
   const project = await fetchProjectShareData(projectId);
@@ -181,7 +318,7 @@ export async function projectOgResponse(projectId: string): Promise<Response> {
     return defaultOgResponse();
   }
 
-  // Téléchargement optionnel de la cover en base64
+  // Téléchargement optionnel de la cover en base64 pour inclusion directe dans l'image
   let coverDataUri: string | null = null;
   if (project.cover_url) {
     coverDataUri = await fetchImageDataUri("covers", project.cover_url);
@@ -202,6 +339,27 @@ export async function projectOgResponse(projectId: string): Promise<Response> {
     seed: `${project.id}:${project.title}`,
   });
 
+  const pngBytes = await renderSvgToPng(svg);
+  if (pngBytes) {
+    return new Response(pngBytes, {
+      headers: {
+        "Content-Type": "image/png",
+        "Cache-Control": "public, max-age=1800, s-maxage=3600",
+      },
+    });
+  }
+
+  // Secours si rasterisation échoue : redirection directe vers l'image de couverture si présente
+  if (project.cover_url) {
+    try {
+      const sb = serviceClient();
+      const { data } = await sb.storage.from("covers").createSignedUrl(project.cover_url, 3600);
+      if (data?.signedUrl) {
+        return Response.redirect(data.signedUrl, 302);
+      }
+    } catch {}
+  }
+
   return new Response(svg, {
     headers: {
       "Content-Type": "image/svg+xml; charset=utf-8",
@@ -211,7 +369,7 @@ export async function projectOgResponse(projectId: string): Promise<Response> {
 }
 
 /**
- * Génère l'image SVG Open Graph pour une vitrine artiste.
+ * Génère l'image Open Graph pour une vitrine artiste (PNG).
  */
 export async function avatarOgResponse(username: string): Promise<Response> {
   const profile = await fetchProfileByUsername(username);
@@ -243,6 +401,16 @@ export async function avatarOgResponse(username: string): Promise<Response> {
     avatarDataUri,
   });
 
+  const pngBytes = await renderSvgToPng(svg);
+  if (pngBytes) {
+    return new Response(pngBytes, {
+      headers: {
+        "Content-Type": "image/png",
+        "Cache-Control": "public, max-age=1800, s-maxage=3600",
+      },
+    });
+  }
+
   return new Response(svg, {
     headers: {
       "Content-Type": "image/svg+xml; charset=utf-8",
@@ -252,10 +420,21 @@ export async function avatarOgResponse(username: string): Promise<Response> {
 }
 
 /**
- * Génère l'image SVG Open Graph par défaut du site.
+ * Génère l'image Open Graph par défaut du site (PNG).
  */
-export function defaultOgResponse(): Response {
-  return new Response(defaultOgSvg(), {
+export async function defaultOgResponse(): Promise<Response> {
+  const svg = defaultOgSvg();
+  const pngBytes = await renderSvgToPng(svg);
+  if (pngBytes) {
+    return new Response(pngBytes, {
+      headers: {
+        "Content-Type": "image/png",
+        "Cache-Control": "public, max-age=86400, s-maxage=604800",
+      },
+    });
+  }
+
+  return new Response(svg, {
     headers: {
       "Content-Type": "image/svg+xml; charset=utf-8",
       "Cache-Control": "public, max-age=86400, s-maxage=604800",

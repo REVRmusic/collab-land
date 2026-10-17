@@ -133,7 +133,19 @@ describe("share-meta utilities", () => {
 
     expect(svg).toContain("CollabLand");
     expect(svg).toContain("Faites de la musique ensemble");
-    expect(svg).toContain("Lecteur Waveform");
-    expect(svg).toContain("Gestion des Versions");
+  });
+
+  it("rasterizes SVG to valid PNG binary with renderSvgToPng", async () => {
+    const { renderSvgToPng } = await import("@/lib/share-meta.server");
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="315"><rect width="600" height="315" fill="#140f22"/><text x="40" y="80" font-family="'Space Grotesk'" font-size="32" fill="#ffffff">CollabLand Test</text></svg>`;
+    const png = await renderSvgToPng(svg);
+
+    expect(png).not.toBeNull();
+    expect(png!.length).toBeGreaterThan(100);
+    // Check PNG magic bytes: 0x89, 'P', 'N', 'G'
+    expect(png![0]).toBe(0x89);
+    expect(png![1]).toBe(0x50);
+    expect(png![2]).toBe(0x4e);
+    expect(png![3]).toBe(0x47);
   });
 });
