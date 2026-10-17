@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Download, GitBranch, ImagePlus, Layers, LifeBuoy, Lock, MessageCircle, Palette, Plus, Star, Trash2, Users } from "lucide-react";
+import { Download, GitBranch, ImagePlus, Layers, LifeBuoy, Lock, MessageCircle, Palette, Plus, Share2, Star, Trash2, Users } from "lucide-react";
 import { linkHost, cleanLink } from "@/lib/links";
 import { EditProjectDialog, EditVersionDialog } from "@/components/project/EditProjectDialog";
 import { ProjectInviteDialog } from "@/components/project/ProjectInviteDialog";
@@ -22,16 +22,35 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { getProjectShareMeta } from "@/lib/project-share.functions";
+import { buildProjectShareMeta } from "@/lib/share-meta";
 
 export const Route = createFileRoute("/_authenticated/projects/$id")({
-  head: () => ({
-    meta: [
-      { title: "Projet — CollabLand" },
-      { name: "description", content: "Versions, discussion et covers d'un projet partagé." },
-      { property: "og:title", content: "Projet — CollabLand" },
-      { property: "og:description", content: "Versions, discussion et covers d'un projet partagé." },
-    ],
-  }),
+  loader: ({ params }) => getProjectShareMeta({ data: { id: params.id } }),
+  head: ({ loaderData, params }) => {
+    const share = loaderData ?? buildProjectShareMeta(null, params.id, "https://collab-land.lovable.app");
+    return {
+      meta: [
+        { title: share.title },
+        { name: "description", content: share.description },
+        { property: "og:type", content: "music.song" },
+        { property: "og:title", content: share.title },
+        { property: "og:description", content: share.description },
+        { property: "og:url", content: share.pageUrl },
+        { property: "og:image", content: share.imageUrl },
+        { property: "og:image:width", content: "1200" },
+        { property: "og:image:height", content: "630" },
+        { property: "og:image:alt", content: `Pochette et détails du projet ${share.project?.title || "CollabLand"}` },
+        { property: "og:site_name", content: "CollabLand" },
+        { name: "twitter:card", content: "summary_large_image" },
+        { name: "twitter:title", content: share.title },
+        { name: "twitter:description", content: share.description },
+        { name: "twitter:image", content: share.imageUrl },
+        { name: "twitter:image:alt", content: `Pochette et détails du projet ${share.project?.title || "CollabLand"}` },
+      ],
+      links: [{ rel: "canonical", href: share.pageUrl }],
+    };
+  },
   component: ProjectPage,
 });
 
@@ -76,6 +95,28 @@ function ProjectPage() {
   const latest = versions.data?.[0];
   const isOwner = uid === p.owner_id;
 
+  const shareProject = async () => {
+    const url = window.location.href;
+    const title = `${p.title} — ${p.owner.display_name || p.owner.username}`;
+    const text = `Découvre le morceau « ${p.title} » sur CollabLand :`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title, text, url });
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      toast.success("Lien du projet copié");
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
+      try {
+        await navigator.clipboard.writeText(url);
+        toast.success("Lien du projet copié");
+      } catch {
+        toast.error("Impossible de copier le lien");
+      }
+    }
+  };
+
   return (
     <div>
       <section className="relative overflow-hidden rounded-3xl border border-border bg-card p-4 sm:p-6" style={{ backgroundImage: "var(--gradient-glow)" }}>
@@ -108,6 +149,9 @@ function ProjectPage() {
           </div>
         </div>
         <div className="mt-5 flex flex-wrap items-center gap-2">
+          <Button variant="outline" size="sm" onClick={shareProject} className="h-10 px-4 font-semibold">
+            <Share2 className="h-4 w-4" />Partager
+          </Button>
           {latest?.download_url && (
             <a href={latest.download_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90">
               <Download className="h-4 w-4" />Projet V{latest.version_number} · {linkHost(latest.download_url)}

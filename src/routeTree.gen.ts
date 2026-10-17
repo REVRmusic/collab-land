@@ -25,8 +25,10 @@ import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authentic
 import { Route as AuthenticatedProjectsIndexRouteImport } from './routes/_authenticated/projects.index'
 import { Route as AuthenticatedProjectsIdRouteImport } from './routes/_authenticated/projects.$id'
 import { Route as AuthenticatedProjectsNewRouteImport } from './routes/_authenticated/projects.new'
+import { Route as ApiCronDigestRouteImport } from './routes/api/cron/digest'
 import { Route as ApiCronPushRouteImport } from './routes/api/cron/push'
 import { Route as ApiPushDispatchRouteImport } from './routes/api/push/dispatch'
+import { Route as OgProjectsIdRouteImport } from './routes/og/projects.$id'
 import { Route as OgUUsernameRouteImport } from './routes/og/u.$username'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
@@ -113,6 +115,11 @@ const AuthenticatedProjectsNewRoute =
     path: '/projects/new',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiCronDigestRoute = ApiCronDigestRouteImport.update({
+  id: '/api/cron/digest',
+  path: '/api/cron/digest',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiCronPushRoute = ApiCronPushRouteImport.update({
   id: '/api/cron/push',
   path: '/api/cron/push',
@@ -121,6 +128,11 @@ const ApiCronPushRoute = ApiCronPushRouteImport.update({
 const ApiPushDispatchRoute = ApiPushDispatchRouteImport.update({
   id: '/api/push/dispatch',
   path: '/api/push/dispatch',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OgProjectsIdRoute = OgProjectsIdRouteImport.update({
+  id: '/og/projects/$id',
+  path: '/og/projects/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OgUUsernameRoute = OgUUsernameRouteImport.update({
@@ -153,8 +165,10 @@ export interface FileRoutesByFullPath {
   '/u/$username': typeof UUsernameRoute
   '/projects/$id': typeof AuthenticatedProjectsIdRoute
   '/projects/new': typeof AuthenticatedProjectsNewRoute
+  '/api/cron/digest': typeof ApiCronDigestRoute
   '/api/cron/push': typeof ApiCronPushRoute
   '/api/push/dispatch': typeof ApiPushDispatchRoute
+  '/og/projects/$id': typeof OgProjectsIdRoute
   '/og/u/$username': typeof OgUUsernameRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/projects/': typeof AuthenticatedProjectsIndexRoute
@@ -175,8 +189,10 @@ export interface FileRoutesByTo {
   '/u/$username': typeof UUsernameRoute
   '/projects/$id': typeof AuthenticatedProjectsIdRoute
   '/projects/new': typeof AuthenticatedProjectsNewRoute
+  '/api/cron/digest': typeof ApiCronDigestRoute
   '/api/cron/push': typeof ApiCronPushRoute
   '/api/push/dispatch': typeof ApiPushDispatchRoute
+  '/og/projects/$id': typeof OgProjectsIdRoute
   '/og/u/$username': typeof OgUUsernameRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/projects': typeof AuthenticatedProjectsIndexRoute
@@ -199,8 +215,10 @@ export interface FileRoutesById {
   '/u/$username': typeof UUsernameRoute
   '/_authenticated/projects/$id': typeof AuthenticatedProjectsIdRoute
   '/_authenticated/projects/new': typeof AuthenticatedProjectsNewRoute
+  '/api/cron/digest': typeof ApiCronDigestRoute
   '/api/cron/push': typeof ApiCronPushRoute
   '/api/push/dispatch': typeof ApiPushDispatchRoute
+  '/og/projects/$id': typeof OgProjectsIdRoute
   '/og/u/$username': typeof OgUUsernameRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/projects/': typeof AuthenticatedProjectsIndexRoute
@@ -223,8 +241,10 @@ export interface FileRouteTypes {
     | '/u/$username'
     | '/projects/$id'
     | '/projects/new'
+    | '/api/cron/digest'
     | '/api/cron/push'
     | '/api/push/dispatch'
+    | '/og/projects/$id'
     | '/og/u/$username'
     | '/admin/'
     | '/projects/'
@@ -245,8 +265,10 @@ export interface FileRouteTypes {
     | '/u/$username'
     | '/projects/$id'
     | '/projects/new'
+    | '/api/cron/digest'
     | '/api/cron/push'
     | '/api/push/dispatch'
+    | '/og/projects/$id'
     | '/og/u/$username'
     | '/admin'
     | '/projects'
@@ -268,8 +290,10 @@ export interface FileRouteTypes {
     | '/u/$username'
     | '/_authenticated/projects/$id'
     | '/_authenticated/projects/new'
+    | '/api/cron/digest'
     | '/api/cron/push'
     | '/api/push/dispatch'
+    | '/og/projects/$id'
     | '/og/u/$username'
     | '/_authenticated/admin/'
     | '/_authenticated/projects/'
@@ -286,8 +310,10 @@ export interface RootRouteChildren {
   InviteTokenRoute: typeof InviteTokenRoute
   OgDefaultRoute: typeof OgDefaultRoute
   UUsernameRoute: typeof UUsernameRoute
+  ApiCronDigestRoute: typeof ApiCronDigestRoute
   ApiCronPushRoute: typeof ApiCronPushRoute
   ApiPushDispatchRoute: typeof ApiPushDispatchRoute
+  OgProjectsIdRoute: typeof OgProjectsIdRoute
   OgUUsernameRoute: typeof OgUUsernameRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
@@ -407,6 +433,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProjectsNewRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/cron/digest': {
+      id: '/api/cron/digest'
+      path: '/api/cron/digest'
+      fullPath: '/api/cron/digest'
+      preLoaderRoute: typeof ApiCronDigestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/cron/push': {
       id: '/api/cron/push'
       path: '/api/cron/push'
@@ -419,6 +452,13 @@ declare module '@tanstack/react-router' {
       path: '/api/push/dispatch'
       fullPath: '/api/push/dispatch'
       preLoaderRoute: typeof ApiPushDispatchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/og/projects/$id': {
+      id: '/og/projects/$id'
+      path: '/og/projects/$id'
+      fullPath: '/og/projects/$id'
+      preLoaderRoute: typeof OgProjectsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/og/u/$username': {
@@ -479,8 +519,10 @@ const rootRouteChildren: RootRouteChildren = {
   InviteTokenRoute: InviteTokenRoute,
   OgDefaultRoute: OgDefaultRoute,
   UUsernameRoute: UUsernameRoute,
+  ApiCronDigestRoute: ApiCronDigestRoute,
   ApiCronPushRoute: ApiCronPushRoute,
   ApiPushDispatchRoute: ApiPushDispatchRoute,
+  OgProjectsIdRoute: OgProjectsIdRoute,
   OgUUsernameRoute: OgUUsernameRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,

@@ -77,6 +77,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:title", content: "CollabLand — Collaboration entre producteurs" },
       { property: "og:description", content: "Partage tes projets, tes versions et tes stems avec tes amis producteurs." },
       { property: "og:image", content: "https://collab-land.lovable.app/og/default" },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "CollabLand — Collaboration entre producteurs" },
       { name: "twitter:description", content: "Partage tes projets, tes versions et tes stems avec tes amis producteurs." },
